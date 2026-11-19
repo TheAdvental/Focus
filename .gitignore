@@ -1,0 +1,14 @@
+# secrets and local data
+.env
+server/data/
+
+# dependencies and build output
+node_modules/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/src/main/assets/index.html
+
+# built desktop app
+dist/

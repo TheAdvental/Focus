@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Фокус</string>
+    <string name="acc_desc">Під час сесії фокусу закриває програми, які ти сам додав до списку. Бачить лише назву програми, що відкрилась; вміст екрана не читає.</string>
+    <string name="blocked_title">Зараз час фокусу</string>
+    <string name="blocked_back">Повернутися до Фокуса</string>
+    <string name="blocked_ok">Зрозуміло</string>
+    <string name="blocked_task">Ти працюєш над: %1$s</string>
+    <string name="done_title">Сесію завершено</string>
+    <string name="done_text">Час перепочити. Відкрий Фокус, щоб записати результат.</string>
+    <string name="channel">Завершення сесій</string>
+    <string name="channel_remind">Нагадування за планом</string>
+    <string name="remind_title">Час почати: %1$s</string>
+    <string name="remind_step">Перший крок: %1$s</string>
+    <string name="remind_text">За планом — зараз. Почни з двох хвилин.</string>
+</resources>

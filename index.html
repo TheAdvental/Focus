@@ -1,0 +1,1866 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фокус</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='22' fill='%230e0e10'/%3E%3Ccircle cx='24' cy='24' r='20' fill='none' stroke='%23f2b33d' stroke-width='2'/%3E%3Ccircle cx='24' cy='24' r='15' fill='%23efe9db'/%3E%3Cpath d='M24,24 L33.4,20.58 A10,10 0 1 1 27.42,14.6 Z' fill='%230e0e10'/%3E%3C/svg%3E">
+<script>
+// pick the saved look before the first paint
+try { document.documentElement.dataset.theme = localStorage.getItem('focus-app-v1-theme') || 'noir'; }
+catch (e) { document.documentElement.dataset.theme = 'noir'; }
+// language: Ukrainian unless English was chosen in Settings (remembered per device)
+try { window.LANG = localStorage.getItem('focus-app-v1-lang') === 'en' ? 'en' : 'uk'; } catch (e) { window.LANG = 'uk'; }
+document.documentElement.lang = window.LANG;
+</script>
+<style>
+/* Three looks; each one only redefines these variables. Default: noir. */
+:root {
+  --bg: #1a1a1e; --card: #0e0e10; --ink: #efe9db; --muted: #a09a8e; --line: #3b3934; --edge: #efe9db;
+  --accent: #f2b33d; --accent-ink: #17130a; --accent-soft: #3a2e14;
+  --warn: #ff8a66; --warn-soft: #3b2018; --danger: #ff9a9a;
+  --card-border: 2px solid var(--edge); --card-shadow: 6px 6px 0 #000; --btn-shadow: 3px 3px 0 #000; --radius: 14px;
+  --display: "Rockwell", "Roboto Slab", "Noto Serif", Georgia, serif;
+  --sky1: #0a0a0c; --sky2: #2b2b31; --bld: #050506; --win: #f2b33d; --moon: #efe9db; --rain: rgba(239,233,219,.3);
+  --grain: .10;
+}
+[data-theme=poster] {
+  --bg: #e8dcc0; --card: #f7efda; --ink: #1c1915; --muted: #6a6253; --line: #cdbf9f; --edge: #1c1915;
+  --accent: #c8372d; --accent-ink: #fff6e6; --accent-soft: #f0cdbd;
+  --warn: #8f4410; --warn-soft: #f1d9b4; --danger: #a12a22;
+  --card-shadow: 6px 6px 0 #1c1915; --btn-shadow: 3px 3px 0 #1c1915; --radius: 6px;
+  --sky1: #efe3c6; --sky2: #d8c294; --bld: #1c1915; --win: #f7efda; --moon: #c8372d; --rain: rgba(28,25,21,.3);
+  --grain: .16;
+}
+[data-theme=neon] {
+  --bg: #090c1a; --card: #11162e; --ink: #e8eaff; --muted: #9096c2; --line: #2a3160; --edge: #3de0ff;
+  --accent: #ff3d81; --accent-ink: #fff; --accent-soft: #3a1638;
+  --warn: #ffb347; --warn-soft: #3a2a14; --danger: #ff7a9c;
+  --card-border: 1.5px solid var(--edge); --card-shadow: 0 0 22px rgba(61,224,255,.22), 5px 5px 0 rgba(255,61,129,.55);
+  --btn-shadow: 3px 3px 0 rgba(255,61,129,.7); --radius: 18px;
+  --display: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+  --sky1: #070919; --sky2: #3b1a5e; --bld: #04050d; --win: #3de0ff; --moon: #ff3d81; --rain: rgba(61,224,255,.3);
+  --grain: .07;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; min-height: 100vh; }
+/* old-film grain and vignette over everything */
+body::before { content: ""; position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: var(--grain); mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+body::after { content: ""; position: fixed; inset: 0; z-index: 59; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.28) 100%); }
+
+header { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; padding: 14px 24px; border-bottom: 2px solid var(--edge); background: var(--card); }
+.brand { display: flex; align-items: center; gap: 10px; font: 700 24px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; }
+.brand svg { width: 38px; height: 38px; }
+nav { display: flex; gap: 6px; flex-wrap: wrap; }
+nav button { background: none; border: 2px solid transparent; color: var(--muted); padding: 7px 14px; border-radius: 99px;
+  font: 600 13px/1.2 var(--display); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+nav button:hover { color: var(--ink); }
+nav button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--edge); box-shadow: var(--btn-shadow); }
+main { max-width: 1080px; margin: 0 auto; padding: 28px 16px 72px; }
+section[hidden] { display: none; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } .grid .side { order: -1; } }
+.card { background: var(--card); border: var(--card-border); border-radius: var(--radius); padding: 22px; box-shadow: var(--card-shadow); }
+.card + .card { margin-top: 24px; }
+h1 { font: 700 26px/1.2 var(--display); margin: 0 0 4px; letter-spacing: .03em; }
+h2 { font: 700 17px/1.3 var(--display); margin: 0 0 12px; letter-spacing: .06em; text-transform: uppercase; }
+h3 { font: 600 12px/1.3 var(--display); text-transform: uppercase; letter-spacing: .16em; color: var(--accent); margin: 20px 0 6px; }
+.muted { color: var(--muted); font-size: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.btn { border: 2px solid var(--edge); background: var(--card); padding: 8px 16px; border-radius: 99px; cursor: pointer;
+  white-space: nowrap; font-weight: 600; box-shadow: var(--btn-shadow); transition: transform .08s, box-shadow .08s; }
+.btn:hover { background: var(--accent-soft); }
+.btn:active { transform: translate(3px, 3px); box-shadow: none; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.small { padding: 4px 11px; font-size: 13px; }
+.btn.ghost { border-color: transparent; background: none; color: var(--muted); box-shadow: none; }
+.btn.warn { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+.btn.danger { color: var(--danger); }
+input[type=text], input[type=password], input[type=date], input[type=time], input[type=number], select, textarea {
+  width: 100%; padding: 9px 12px; border: 2px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::placeholder { color: var(--muted); opacity: .8; }
+.add { display: flex; gap: 10px; margin: 16px 0 6px; }
+ul.tasks { list-style: none; margin: 0; padding: 0; }
+.task { display: flex; gap: 12px; align-items: flex-start; padding: 13px 0; border-top: 2px dashed var(--line); }
+.task:first-child { border-top: 0; }
+.task input[type=checkbox] { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--accent); flex: none; cursor: pointer; }
+.t-main { flex: 1; min-width: 0; }
+.t-title { font-weight: 600; overflow-wrap: anywhere; }
+.task.done .t-title { text-decoration: line-through; color: var(--muted); font-weight: 400; }
+.t-sub { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.t-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.tag { display: inline-block; font-size: 11px; padding: 1px 9px; border-radius: 99px; background: var(--warn-soft); color: var(--warn);
+  border: 1.5px solid var(--warn); font-weight: 700; margin-left: 8px; text-transform: uppercase; letter-spacing: .06em; vertical-align: 2px; }
+.empty { padding: 20px 0; color: var(--muted); }
+.tag.habit { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.dots { display: flex; gap: 5px; margin-top: 9px; flex-wrap: wrap; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--edge); display: block; }
+.dots .full { background: var(--accent); }
+.dots .mini { background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); }
+.dots .wait { border-style: dashed; }
+.dots .off { border-color: transparent; background: var(--line); transform: scale(.45); }
+#hDays { display: flex; gap: 6px; flex-wrap: wrap; }
+#hDays label { display: flex; align-items: center; gap: 5px; margin: 0; padding: 5px 10px; border: 2px solid var(--line); border-radius: 99px; cursor: pointer; }
+#hDays input { accent-color: var(--accent); }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 34px)); gap: 5px; margin-top: 12px; } /* cells shrink on narrow screens */
+.cal span { font-size: 11px; color: var(--muted); text-align: center; }
+.cell { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--edge); background: none; color: var(--ink);
+  font: 600 12px/1 inherit; cursor: pointer; position: relative; padding: 0; }
+.cell:hover:not(:disabled) { box-shadow: 0 0 0 3px var(--accent-soft); }
+.cell.full { background: var(--accent); color: var(--accent-ink); }
+.cell.mini { background: linear-gradient(90deg, var(--accent) 50%, transparent 50%); }
+.cell.wait { border-style: dashed; }
+.cell.off { border-color: transparent; color: var(--muted); opacity: .45; cursor: default; }
+.cell.future { visibility: hidden; }
+.cell.noted::after { content: ""; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); border: 2px solid var(--card); }
+.h-note { font-style: italic; }
+.h-notes { margin-top: 10px; }
+.timer { text-align: center; }
+.clock { font: 700 68px/1.1 var(--display); font-variant-numeric: tabular-nums; margin: 10px 0 4px; }
+.timer .row, .f-center .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.bar { height: 10px; background: var(--bg); border: 2px solid var(--edge); border-radius: 99px; overflow: hidden; margin-top: 14px; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 18px; margin-bottom: 26px; }
+.stat { background: var(--card); border: var(--card-border); border-radius: var(--radius); padding: 16px; box-shadow: var(--card-shadow); }
+.stat b { display: block; font: 700 30px/1.2 var(--display); font-variant-numeric: tabular-nums; color: var(--accent); }
+.week { display: flex; gap: 10px; align-items: flex-end; height: 160px; }
+.week div { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: 12px; color: var(--muted); }
+.week i { display: block; width: 100%; max-width: 48px; background: var(--accent); border: 2px solid var(--edge); border-bottom: 0; border-radius: 8px 8px 0 0; min-height: 4px; }
+.week span { margin-top: 4px; }
+.log { list-style: none; padding: 0; margin: 0; font-size: 14px; }
+.log li { display: flex; gap: 12px; padding: 7px 0; border-top: 2px dashed var(--line); }
+.log li:first-child { border-top: 0; }
+.log time { color: var(--accent); font-variant-numeric: tabular-nums; flex: none; font-weight: 600; }
+dialog { border: var(--card-border); border-radius: var(--radius); background: var(--card); color: var(--ink);
+  padding: 24px; width: min(520px, calc(100vw - 32px)); box-shadow: var(--card-shadow); }
+dialog::backdrop { background: rgba(0,0,0,.6); }
+label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 4px; }
+label small { font-weight: 400; color: var(--muted); }
+.cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .cols { grid-template-columns: 1fr !important; } }
+.actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+.reasons { display: grid; gap: 10px; margin-top: 12px; }
+.reasons .btn { text-align: left; white-space: normal; border-radius: 12px; }
+.advice { background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
+.advice ul { margin: 6px 0 0; padding-left: 20px; }
+.method { border-top: 2px dashed var(--line); padding: 14px 0; }
+.method:first-of-type { border-top: 0; }
+.method b { display: block; font-family: var(--display); letter-spacing: .02em; }
+.method em { color: var(--accent); font-style: normal; font-size: 14px; display: block; }
+.syncline { display: flex; align-items: center; gap: 10px; min-height: 36px; }
+.syncline canvas { width: 36px; height: 36px; flex: none; }
+.syncline canvas[hidden] { display: none; }
+.swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+.swatches .btn { display: flex; align-items: center; gap: 8px; }
+.swatches i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--edge); display: inline-block; }
+.copyrow { display: flex; gap: 8px; align-items: flex-start; }
+.copyrow code { flex: 1; min-width: 0; padding: 9px 12px; border: 2px solid var(--line); border-radius: 10px; background: var(--bg);
+  font: 13px/1.45 Consolas, "Cascadia Mono", monospace; overflow-wrap: anywhere; white-space: pre-wrap; user-select: all; }
+
+/* ---------- our own controls instead of the system-drawn ones ---------- */
+html { scrollbar-color: var(--accent) var(--bg); scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); border: 2px solid var(--bg); border-radius: 99px; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+* { -webkit-tap-highlight-color: transparent; }
+/* check box: a stamped tick */
+input[type=checkbox] { appearance: none; -webkit-appearance: none; margin: 0; flex: none; cursor: pointer; }
+.task input[type=checkbox] { width: 26px; height: 26px; margin-top: 0; border: 2px solid var(--edge); border-radius: 8px; background: var(--bg);
+  position: relative; box-shadow: var(--btn-shadow); transition: transform .08s, box-shadow .08s, background .15s; }
+.task input[type=checkbox]:active { transform: translate(3px, 3px); box-shadow: none; }
+.task input[type=checkbox]:checked { background: var(--accent); }
+.task input[type=checkbox]:checked::after { content: ""; position: absolute; left: 7px; top: 2px; width: 7px; height: 13px;
+  border: solid var(--accent-ink); border-width: 0 3px 3px 0; transform: rotate(45deg); }
+/* on/off switch */
+input.switch { width: 46px; height: 26px; border: 2px solid var(--edge); border-radius: 99px; background: var(--bg); position: relative; transition: background .15s; }
+input.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--edge);
+  transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), background .15s; }
+input.switch:checked { background: var(--accent); }
+input.switch:checked::after { transform: translateX(20px); background: var(--accent-ink); }
+.toggle { display: flex; gap: 12px; align-items: center; margin: 0 0 12px; cursor: pointer; font-weight: 600; }
+/* weekday pills: the whole pill is the control */
+#hDays label { position: relative; transition: background .15s; }
+#hDays input { position: absolute; inset: 0; opacity: 0; }
+#hDays label:has(input:checked) { background: var(--accent); color: var(--accent-ink); border-color: var(--edge); }
+/* number with − and + */
+.stepper { display: flex; align-items: stretch; border: 2px solid var(--line); border-radius: 10px; background: var(--bg); overflow: hidden; }
+.stepper:focus-within { border-color: var(--accent); }
+.stepper input { border: 0; border-radius: 0; text-align: center; min-width: 0; font-weight: 600; -moz-appearance: textfield; }
+.stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.stepper button { width: 44px; flex: none; border: 0; background: var(--card); color: var(--ink); font: 700 20px/1 var(--display); cursor: pointer; }
+.stepper button:hover { background: var(--accent-soft); }
+.stepper button:active { background: var(--accent); color: var(--accent-ink); }
+/* drop-down list */
+select.native { display: none; }
+.dd { position: relative; text-align: left; }
+.dd > button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px;
+  border: 2px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); cursor: pointer; text-align: left; }
+.dd > button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd > button::after { content: ""; flex: none; width: 8px; height: 8px; margin: 0 4px 3px; border: solid var(--accent); border-width: 0 3px 3px 0;
+  transform: rotate(45deg); transition: transform .18s; }
+.dd.open > button { border-color: var(--accent); }
+.dd.open > button::after { transform: translateY(4px) rotate(-135deg); }
+.dd ul { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none; display: none;
+  background: var(--card); border: var(--card-border); border-radius: 12px; box-shadow: var(--card-shadow); max-height: 240px; overflow: auto; }
+.dd.open ul { display: block; animation: ddIn .14s ease-out; }
+.dd li { padding: 8px 10px; border-radius: 8px; cursor: pointer; overflow-wrap: anywhere; }
+.dd li:hover { background: var(--accent-soft); }
+.dd li.sel { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+@keyframes ddIn { from { opacity: 0; transform: translateY(-6px); } }
+@media (max-width: 360px) { .btn { white-space: normal; } }
+/* date and time: a button that opens our own picker */
+.pick { width: 100%; padding: 9px 12px; border: 2px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); text-align: left; cursor: pointer; }
+.pick:hover { border-color: var(--accent); }
+.pick.empty { color: var(--muted); }
+.pick-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.pick-head b { font: 700 17px var(--display); text-transform: capitalize; }
+#pickBody .cal { justify-content: center; }
+.chips { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.chip { padding: 8px 0; border: 2px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font-weight: 600; cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+.chip.sel { background: var(--accent); color: var(--accent-ink); border-color: var(--edge); }
+/* app list on the phone */
+#appList { max-height: 48vh; overflow: auto; margin-top: 10px; }
+#appList .toggle { margin: 0; flex: 1; justify-content: space-between; font-weight: 400; }
+#appList li { display: flex; padding: 9px 2px; border-top: 2px dashed var(--line); } /* not .task: that class restyles check boxes */
+#appList li:first-child { border-top: 0; }
+/* PC app: the header doubles as the window's title bar */
+html.desktop header { position: sticky; top: 0; z-index: 20; -webkit-app-region: drag; padding-right: 150px; }
+html.desktop header button { -webkit-app-region: no-drag; }
+html.desktop .f-top { top: 54px; }
+html.desktop #focus::before { content: ""; position: absolute; top: 0; left: 0; right: 140px; height: 44px; z-index: 3; -webkit-app-region: drag; }
+
+/* ---------- start-up ident: iris opens on a title card, then closes onto the app ---------- */
+#splash { position: fixed; inset: 0; z-index: 100; background: #0b0b0d; cursor: pointer;
+  clip-path: circle(150vmax at 50% 50%); transition: clip-path .65s cubic-bezier(.7, 0, .84, 0); }
+#splash.out { clip-path: circle(0 at 50% 50%); }
+#splash .stage { position: absolute; inset: 0; background: #efe9db; color: #17130a; display: grid; place-items: center;
+  animation: irisIn .9s cubic-bezier(.16, 1, .3, 1) both; }
+#splash canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .2; }
+.ident { position: relative; text-align: center; padding: 16px; }
+.ident svg { width: min(34vmin, 170px); height: auto; animation: pop .7s .3s cubic-bezier(.34, 1.56, .64, 1) both; }
+.ident .pupil { transform-box: fill-box; transform-origin: center; animation: look 1.5s .55s cubic-bezier(.34, 1.56, .64, 1) both; }
+.word { font: 700 clamp(40px, 11vmin, 84px)/1.1 "Rockwell", "Roboto Slab", "Noto Serif", Georgia, serif; letter-spacing: .14em; margin: 10px 0 0 .14em; }
+.word span { display: inline-block; animation: drop .5s cubic-bezier(.34, 1.56, .64, 1) both; animation-delay: calc(.7s + var(--i) * .08s); }
+.motto { font-size: 13px; letter-spacing: .34em; text-transform: uppercase; margin-top: 8px; animation: fade .6s 1.4s both; }
+@keyframes irisIn { from { clip-path: circle(0 at 50% 50%); } to { clip-path: circle(150vmax at 50% 50%); } }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes look { 0% { transform: rotate(-200deg); } 45% { transform: rotate(40deg); } 70% { transform: rotate(-12deg); } 100% { transform: rotate(0); } }
+@keyframes drop { from { transform: translateY(-70%) scaleY(1.5); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- focus screen ---------- */
+#focus { position: fixed; inset: 0; z-index: 40; background: var(--sky1); color: var(--ink); display: grid; place-items: center; overflow: hidden; }
+#focus[hidden] { display: none; }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+#focus::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.5) 100%); }
+.f-top { position: absolute; top: 16px; right: 16px; z-index: 2; }
+.f-center { position: relative; z-index: 2; text-align: center; padding: 16px; margin-bottom: 12vh; }
+.f-label { font: 600 14px/1 var(--display); letter-spacing: .42em; text-transform: uppercase; color: var(--accent); margin-left: .42em; }
+.f-clock { font: 700 clamp(76px, 21vw, 210px)/1 var(--display); font-variant-numeric: tabular-nums; text-shadow: 5px 5px 0 var(--sky1); }
+.f-task { font-size: 18px; max-width: 40ch; margin: 10px auto 4px; text-shadow: 0 0 12px var(--sky1), 0 0 4px var(--sky1); overflow-wrap: anywhere; }
+.gram { position: absolute; left: 20px; bottom: 20px; z-index: 2; display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.gram svg { width: clamp(104px, 22vmin, 176px); height: auto; overflow: visible; }
+.gram .disc { transform-box: fill-box; transform-origin: center; animation: spin 1.8s linear infinite paused; }
+.gram.on .disc { animation-play-state: running; }
+.gram .arm { transform-box: view-box; transform-origin: 170px 30px; transform: rotate(-27deg); transition: transform .9s cubic-bezier(.34, 1.56, .64, 1); }
+.gram.on .arm { transform: rotate(0); }
+.gram .note { font: 700 26px var(--display); fill: var(--accent); opacity: 0; }
+.gram.on .note { animation: note 2.6s ease-out infinite; }
+.gram.on .note.n2 { animation-delay: .9s; }
+.gram.on .note.n3 { animation-delay: 1.7s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes note { 0% { opacity: 0; transform: translate(0, 0) rotate(-10deg); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(26px, -70px) rotate(18deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #splash .stage, .ident svg, .ident .pupil, .word span, .motto { animation: none; }
+  #splash { transition: opacity .3s; } #splash.out { opacity: 0; clip-path: none; }
+  .gram.on .disc, .gram.on .note { animation: none; } .gram .arm { transition: none; }
+  .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+<!-- start-up ident; removed from the page once it has played -->
+<div id="splash">
+  <div class="stage">
+    <canvas id="splashFx"></canvas>
+    <div class="ident">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0e0e10"/><circle cx="24" cy="24" r="20" fill="none" stroke="#f2b33d" stroke-width="2"/><circle cx="24" cy="24" r="15" fill="#efe9db"/><path class="pupil" d="M24,24 L33.4,20.58 A10,10 0 1 1 27.42,14.6 Z" fill="#0e0e10"/></svg>
+      <div class="word"><span style="--i:0">Ф</span><span style="--i:1">О</span><span style="--i:2">К</span><span style="--i:3">У</span><span style="--i:4">С</span></div>
+      <div class="motto">одна справа за раз</div>
+      <script>if (window.LANG === 'en') { document.querySelectorAll('#splash .word span').forEach((s, i) => s.textContent = 'FOCUS'[i]); document.querySelector('#splash .motto').textContent = 'one thing at a time'; }</script>
+    </div>
+  </div>
+</div>
+<header>
+  <div class="brand"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0e0e10"/><circle cx="24" cy="24" r="20" fill="none" stroke="#f2b33d" stroke-width="2"/><circle cx="24" cy="24" r="15" fill="#efe9db"/><path d="M24,24 L33.4,20.58 A10,10 0 1 1 27.42,14.6 Z" fill="#0e0e10"/></svg>Фокус</div>
+  <nav id="nav">
+    <button data-view="today" class="on">Сьогодні</button>
+    <button data-view="tasks">Усі завдання</button>
+    <button data-view="habits">Звички</button>
+    <button data-view="stats">Статистика</button>
+    <button data-view="methods">Методи</button>
+    <button data-view="settings">Налаштування</button>
+  </nav>
+</header>
+<main>
+  <section id="v-today">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <h1 id="todayDate"></h1>
+          <div class="muted" id="todaySummary"></div>
+          <form class="add" id="quickAdd">
+            <input type="text" id="quickTitle" placeholder="Що потрібно зробити сьогодні?" autocomplete="off">
+            <button class="btn primary">Додати</button>
+          </form>
+          <div id="calBox"></div>
+          <ul class="tasks" id="todayList"></ul>
+        </div>
+      </div>
+      <div class="side">
+        <div class="card timer">
+          <div class="muted" id="timerLabel">Готовий почати?</div>
+          <div class="clock" id="clock">25:00</div>
+          <div class="muted" id="timerTask"></div>
+          <div class="bar"><i id="timerBar"></i></div>
+          <div id="timerIdle">
+            <label for="timerSelect" style="text-align:left">Над чим працюєш</label>
+            <select id="timerSelect"></select>
+            <div class="row">
+              <button class="btn primary" data-act="start">Почати фокус</button>
+              <button class="btn" data-act="start5">Лише 5 хвилин</button>
+            </div>
+          </div>
+          <div id="timerRun" hidden>
+            <div class="row">
+              <button class="btn primary" data-act="focusOpen">Екран фокусу</button>
+              <button class="btn" data-act="stop">Зупинити</button>
+            </div>
+          </div>
+          <div class="row"><button class="btn warn" data-act="stuck">Я відкладаю…</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="v-tasks" hidden>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h1>Усі завдання</h1>
+        <button class="btn primary" data-act="new">Нове завдання</button>
+      </div>
+      <div id="allTasks"></div>
+    </div>
+  </section>
+
+  <section id="v-habits" hidden>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h1>Звички</h1>
+        <button class="btn primary" data-act="newHabit">Нова звичка</button>
+      </div>
+      <p class="muted">Звичка — це завдання, що повторюється. У свої дні вона сама з'являється в плані, нагадує про себе і має мінімальну версію на поганий день.</p>
+      <div id="habitList"></div>
+      <p class="muted">Кружечки — останні 5 тижнів: зафарбований — виконано, наполовину — мінімальна версія, порожній — пропуск. Натисни на день, щоб відмітити його або додати нотатку; крапка в кутку означає, що нотатка є.</p>
+    </div>
+  </section>
+
+  <section id="v-stats" hidden>
+    <div class="stats" id="statTiles"></div>
+    <div class="card"><h2>Хвилини фокусу за 7 днів</h2><div class="week" id="week"></div></div>
+    <div class="card"><h2>Що і коли я робив сьогодні</h2><ul class="log" id="log"></ul></div>
+    <div class="card"><h2>Чому я відкладаю</h2><div id="reasonStats"></div></div>
+  </section>
+
+  <section id="v-methods" hidden>
+    <div class="card">
+      <h1>Чому це має працювати</h1>
+      <p class="muted">Кожна частина додатка спирається на метод із досліджень прокрастинації.</p>
+      <div class="method"><b>Прокрастинація — це про емоції, а не про лінь</b>
+        Ми відкладаємо, щоб просто зараз уникнути неприємного відчуття: нудьги, тривоги, розгубленості. Тому спершу варто назвати, що саме відчуваєш.
+        <em>У додатку: кнопка «Я відкладаю…»</em></div>
+      <div class="method"><b>План «коли → що»</b>
+        Рішення «о 14:00 відкриваю конспект» виконується значно частіше, ніж «повчуся сьогодні», бо не лишає місця для торгів із собою.
+        <em>У додатку: час і перший крок у кожному завданні</em></div>
+      <div class="method"><b>Крихітний перший крок</b>
+        Що більше і туманніше завдання, то менша віра, що впораєшся, і то сильніше хочеться втекти. Крок на 2–5 хвилин знімає цей бар'єр.
+        <em>У додатку: поле «Перший крок»</em></div>
+      <div class="method"><b>Правило п'яти хвилин</b>
+        Найважче — почати. Домовся з собою лише на 5 хвилин; після них зазвичай легше продовжити, ніж кинути.
+        <em>У додатку: кнопка «Лише 5 хвилин»</em></div>
+      <div class="method"><b>Короткі відрізки з перервами</b>
+        Обмежений у часі відрізок роботи робить фініш близьким, а нагороду (перерву) — швидкою.
+        <em>У додатку: таймер фокусу</em></div>
+      <div class="method"><b>Самоспостереження</b>
+        Запис того, що і коли ти реально робив, показує справжню картину і сам по собі підсилює контроль.
+        <em>У додатку: вкладка «Статистика»</em></div>
+      <div class="method"><b>Звичка тримається на сигналі, а не на силі волі</b>
+        Дія, прив'язана до конкретного моменту («після сніданку відкриваю конспект»), з часом запускається сама. А мінімальна версія не дає одному поганому дню зламати все: пропустити можна, двічі поспіль — ні.
+        <em>У додатку: вкладка «Звички»</em></div>
+      <div class="method"><b>Самоспівчуття замість самокритики</b>
+        Сварити себе за відкладання — означає додати ще більше неприємних емоцій, від яких знову хочеться втекти. Зірвався — зафіксуй і зроби наступний маленький крок.</div>
+      <div class="method"><b>Прибери спокуси заздалегідь</b>
+        Телефон в іншій кімнаті працює краще, ніж сила волі. Перед сесією закрий зайві вкладки і вимкни сповіщення.</div>
+    </div>
+  </section>
+
+  <section id="v-settings" hidden>
+    <div class="card">
+      <h2>Оформлення</h2>
+      <div class="swatches">
+        <button class="btn" data-act="theme" data-theme-pick="noir"><i style="background:#0e0e10"></i><i style="background:#f2b33d"></i>Нуар</button>
+        <button class="btn" data-act="theme" data-theme-pick="poster"><i style="background:#f7efda"></i><i style="background:#c8372d"></i>Афіша</button>
+        <button class="btn" data-act="theme" data-theme-pick="neon"><i style="background:#11162e"></i><i style="background:#ff3d81"></i>Неон</button>
+      </div>
+      <h3>Мова</h3>
+      <div class="swatches">
+        <button class="btn" data-act="lang" data-lang="uk">Українська</button>
+        <button class="btn" data-act="lang" data-lang="en">English</button>
+      </div>
+      <p class="muted">Оформлення і мова запам'ятовуються окремо на кожному пристрої.</p>
+    </div>
+    <div class="card">
+      <h2>Блокування під час фокусу</h2>
+      <div class="cols" style="grid-template-columns:1fr 1fr">
+        <div><label for="blockSites">Сайти <small>— по одному в рядку</small></label><textarea id="blockSites" rows="6" placeholder="youtube.com"></textarea></div>
+        <div><label for="blockApps">Програми <small>— назва файлу</small></label><textarea id="blockApps" rows="6" placeholder="Telegram.exe"></textarea></div>
+      </div>
+      <div class="actions" style="justify-content:flex-start"><button class="btn primary" data-act="saveBlock">Зберегти списки</button></div>
+      <p class="muted" id="blockNote"></p>
+      <div id="phoneBlock" hidden>
+        <h3>На цьому телефоні</h3>
+        <div class="actions" style="justify-content:flex-start">
+          <button class="btn primary" data-act="pickApps">Обрати програми</button>
+          <button class="btn" data-act="openAcc">Увімкнути блокування</button>
+        </div>
+        <p class="muted" id="phoneNote"></p>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Синхронізація з сервером</h2>
+      <label for="syncUrl">Адреса сервера</label>
+      <input type="text" id="syncUrl" placeholder="http://192.168.1.10:8080" autocomplete="off">
+      <label for="syncToken">Ключ доступу</label>
+      <input type="password" id="syncToken" autocomplete="off" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg)">
+      <div class="actions" style="justify-content:flex-start"><button class="btn primary" data-act="syncNow">Зберегти і синхронізувати</button></div>
+      <p class="muted syncline"><canvas id="syncFx" hidden></canvas><span id="syncStatus">Без сервера додаток працює лише локально.</span></p>
+    </div>
+    <div class="card" id="claudeCard" hidden>
+      <h2>Claude</h2>
+      <p class="muted">Claude може додавати, змінювати й видаляти завдання та звички, розкладати їх по днях і часу, відмічати звички й показувати статистику. Для цього програма «Фокус» має бути запущена (хоча б у треї).</p>
+      <label>Claude Code — виконай у терміналі один раз</label>
+      <div class="copyrow"><code id="mcpCode"></code><button class="btn small" data-act="copy" data-from="mcpCode">Копіювати</button></div>
+      <label>Claude Desktop — додай у файл claude_desktop_config.json і перезапусти Claude</label>
+      <div class="copyrow"><code id="mcpDesktop"></code><button class="btn small" data-act="copy" data-from="mcpDesktop">Копіювати</button></div>
+      <p class="muted">Потрібен встановлений Node.js. Ключ доступу програма зберігає сама — вводити його не треба.</p>
+    </div>
+    <div class="card">
+      <h2>Google Календар</h2>
+      <label for="calUrl">Приватна адреса календаря у форматі iCal</label>
+      <input type="password" id="calUrl" autocomplete="off" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg)">
+      <div class="actions" style="justify-content:flex-start"><button class="btn" data-act="saveCal">Зберегти на сервері</button></div>
+      <p class="muted" id="calStatus">Адреса зберігається лише на сервері; порожнє поле вимикає календар.</p>
+    </div>
+    <div class="card">
+      <h2>Таймер і дані</h2>
+      <label class="toggle"><input type="checkbox" class="switch" id="setRemind">Нагадувати, коли настав час завдання</label>
+      <label class="toggle" id="autoRow" hidden style="display:none"><input type="checkbox" class="switch" id="setAuto">Запускати разом із Windows (у треї)</label>
+      <div class="cols">
+        <div><label for="setFocus">Фокус, хв</label><div class="stepper"><button type="button" data-step="-5" data-for="setFocus" aria-label="−">−</button><input type="number" id="setFocus" min="5" max="120"><button type="button" data-step="5" data-for="setFocus" aria-label="+">+</button></div></div>
+        <div><label for="setBreak">Перерва, хв</label><div class="stepper"><button type="button" data-step="-1" data-for="setBreak" aria-label="−">−</button><input type="number" id="setBreak" min="1" max="60"><button type="button" data-step="1" data-for="setBreak" aria-label="+">+</button></div></div>
+      </div>
+      <div class="actions" style="justify-content:flex-start">
+        <button class="btn" data-act="export">Зберегти копію даних</button>
+        <button class="btn" data-act="import">Відновити з копії</button>
+        <input type="file" id="importFile" accept=".json" hidden>
+      </div>
+      <p class="muted">Дані зберігаються лише в цьому браузері на цьому комп'ютері.</p>
+    </div>
+  </section>
+</main>
+
+<!-- full-screen focus mode: night city, timer, record player -->
+<div id="focus" hidden>
+  <canvas id="scene"></canvas>
+  <div class="f-top"><button class="btn small" data-act="focusMin">Згорнути</button></div>
+  <div class="f-center">
+    <div class="f-label" id="fLabel">Фокус</div>
+    <div class="f-clock" id="fClock">25:00</div>
+    <div class="f-task" id="fTask"></div>
+    <div class="row">
+      <button class="btn" data-act="stop">Зупинити</button>
+      <button class="btn warn" data-act="stuck">Я відкладаю…</button>
+    </div>
+  </div>
+  <div class="gram" id="gram">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <rect x="6" y="6" width="188" height="188" rx="18" fill="var(--card)" stroke="var(--edge)" stroke-width="3"/>
+      <g class="disc">
+        <circle cx="92" cy="108" r="76" fill="#0a0a0b" stroke="var(--edge)" stroke-width="2.5"/>
+        <circle cx="92" cy="108" r="66" fill="none" stroke="#fff" stroke-opacity=".12"/>
+        <circle cx="92" cy="108" r="56" fill="none" stroke="#fff" stroke-opacity=".12"/>
+        <circle cx="92" cy="108" r="46" fill="none" stroke="#fff" stroke-opacity=".12"/>
+        <circle cx="92" cy="108" r="36" fill="none" stroke="#fff" stroke-opacity=".12"/>
+        <path d="M92,40 A68,68 0 0 1 151,74" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="5" stroke-linecap="round"/>
+        <path d="M92,176 A68,68 0 0 1 33,142" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="92" cy="108" r="26" fill="var(--accent)" stroke="#0a0a0b" stroke-width="2"/>
+        <path d="M92,108 L102.34,104.24 A11,11 0 1 1 95.76,97.66 Z" fill="#0a0a0b"/>
+        <circle cx="92" cy="108" r="2.5" fill="var(--accent)"/>
+      </g>
+      <g class="arm">
+        <path d="M170,30 L129,95" stroke="var(--edge)" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="170" cy="30" r="11" fill="var(--card)" stroke="var(--edge)" stroke-width="3"/>
+        <rect x="116" y="89" width="22" height="15" rx="4" transform="rotate(-32 127 96)" fill="var(--accent)" stroke="var(--edge)" stroke-width="2.5"/>
+      </g>
+      <text class="note" x="150" y="70">♪</text>
+      <text class="note n2" x="166" y="92">♫</text>
+      <text class="note n3" x="140" y="96">♪</text>
+    </svg>
+    <button class="btn small" data-act="music" id="musicBtn" aria-pressed="false">Увімкнути музику</button>
+  </div>
+</div>
+
+<!-- our own replacements for the system pop-ups: confirmations, date/time pickers, the phone's app list -->
+<dialog id="dlgAsk">
+  <p id="askText" style="margin:0;font-size:17px"></p>
+  <div class="actions">
+    <button type="button" class="btn" id="askNo">Скасувати</button>
+    <button type="button" class="btn primary" id="askYes">Гаразд</button>
+  </div>
+</dialog>
+<dialog id="dlgPick">
+  <div id="pickBody"></div>
+  <div class="actions">
+    <button type="button" class="btn ghost" id="pickClear" style="margin-right:auto">Очистити</button>
+    <button type="button" class="btn" data-act="closeDlg">Закрити</button>
+    <button type="button" class="btn primary" id="pickOk">Готово</button>
+  </div>
+</dialog>
+<dialog id="dlgApps">
+  <h2>Що блокувати під час фокусу</h2>
+  <input type="text" id="appSearch" placeholder="Пошук програми" autocomplete="off">
+  <ul class="tasks" id="appList"></ul>
+  <div class="actions">
+    <button type="button" class="btn" data-act="closeDlg">Скасувати</button>
+    <button type="button" class="btn primary" id="appsSave">Зберегти</button>
+  </div>
+</dialog>
+
+<dialog id="dlgTask">
+  <form method="dialog" id="taskForm">
+    <h2 id="taskDlgTitle">Завдання</h2>
+    <label for="fTitle">Що потрібно зробити</label>
+    <input type="text" id="fTitle" required>
+    <label for="fStep">Перший крок <small>— на 2–5 хвилин, максимально конкретний</small></label>
+    <input type="text" id="fStep" placeholder="Напр.: відкрити методичку і прочитати умову">
+    <div class="cols">
+      <div><label for="fDate">День</label><input type="hidden" id="fDate"><button type="button" class="pick" data-pick="date" data-for="fDate"></button></div>
+      <div><label for="fTime">О котрій почну</label><input type="hidden" id="fTime"><button type="button" class="pick" data-pick="time" data-for="fTime"></button></div>
+      <div><label for="fDeadline">Дедлайн</label><input type="hidden" id="fDeadline"><button type="button" class="pick" data-pick="date" data-for="fDeadline"></button></div>
+    </div>
+    <label for="fWhy">Навіщо мені це <small>— необов'язково</small></label>
+    <input type="text" id="fWhy" placeholder="Напр.: закрию лабу і звільню вихідні">
+    <div class="actions">
+      <button type="button" class="btn danger ghost" id="fDelete" style="margin-right:auto">Видалити</button>
+      <button type="button" class="btn" data-act="closeDlg">Скасувати</button>
+      <button class="btn primary" value="save">Зберегти</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgStuck">
+  <h2>Що зараз заважає почати?</h2>
+  <div class="muted">Відкладати — нормально для людини. Назви причину, і підберемо наступний крок.</div>
+  <div class="reasons" id="reasons"></div>
+  <div class="advice" id="advice" hidden></div>
+  <div class="actions">
+    <button class="btn" data-act="closeDlg">Закрити</button>
+    <button class="btn" id="stuckEdit" hidden>Уточнити завдання</button>
+    <button class="btn primary" id="stuckGo" hidden>Почати на 5 хвилин</button>
+  </div>
+</dialog>
+
+<dialog id="dlgHabit">
+  <form method="dialog" id="habitForm">
+    <h2 id="habitDlgTitle">Звичка</h2>
+    <label for="hTitle">Що робити регулярно</label>
+    <input type="text" id="hTitle" required placeholder="Напр.: читати конспект з матану">
+    <label for="hMini">Мінімальна версія <small>— зараховується в поганий день</small></label>
+    <input type="text" id="hMini" placeholder="Напр.: прочитати одну сторінку">
+    <label for="hCue">Сигнал <small>— після чого або де</small></label>
+    <input type="text" id="hCue" placeholder="Напр.: після сніданку">
+    <label for="hNote">Нотатка до звички <small>— необов'язково</small></label>
+    <textarea id="hNote" rows="2" placeholder="Напр.: навіщо мені це, правила для себе"></textarea>
+    <div class="cols" style="grid-template-columns:1fr 2fr">
+      <div><label for="hTime">О котрій нагадати</label><input type="hidden" id="hTime"><button type="button" class="pick" data-pick="time" data-for="hTime"></button></div>
+      <div><label>Дні</label><div id="hDays"></div></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn danger ghost" id="hDelete" style="margin-right:auto">Видалити</button>
+      <button type="button" class="btn" data-act="closeDlg">Скасувати</button>
+      <button class="btn primary" value="save">Зберегти</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgDay">
+  <h3 id="dayDate" style="margin-top:0"></h3>
+  <h2 id="dayTitle" style="text-transform:none;font-size:20px"></h2>
+  <div class="swatches" id="dayState">
+    <button type="button" class="btn" data-state="full">Виконано</button>
+    <button type="button" class="btn" data-state="mini">Мінімум</button>
+    <button type="button" class="btn" data-state="none">Не зроблено</button>
+  </div>
+  <label for="dayNote">Нотатка за день</label>
+  <textarea id="dayNote" rows="4" placeholder="Що вийшло, що заважало"></textarea>
+  <div class="actions">
+    <button type="button" class="btn" data-act="closeDlg">Скасувати</button>
+    <button type="button" class="btn primary" id="daySave">Зберегти</button>
+  </div>
+</dialog>
+
+<dialog id="dlgRemind">
+  <h3 style="margin-top:0">За планом — зараз</h3>
+  <h2 id="remTitle" style="text-transform:none;font-size:22px"></h2>
+  <div class="advice" id="remStep"></div>
+  <div class="actions">
+    <button class="btn ghost" id="remLater">Не зараз</button>
+    <button class="btn" id="remSnooze">Через 10 хв</button>
+    <button class="btn" id="remFive">Лише 5 хвилин</button>
+    <button class="btn primary" id="remGo">Почати фокус</button>
+  </div>
+</dialog>
+
+<dialog id="dlgDone">
+  <h2 id="doneTitle"></h2>
+  <div class="muted" id="doneText"></div>
+  <div class="actions">
+    <button class="btn" data-act="closeDlg">Закрити</button>
+    <button class="btn" id="doneFinish">Завдання виконано</button>
+    <button class="btn" id="doneBreak">Перерва</button>
+    <button class="btn primary" id="doneMore">Ще одна сесія</button>
+  </div>
+</dialog>
+
+<script>
+/* ---------- language ---------- */
+// The page is written in Ukrainian. For English nothing in the rendering code changes: every text that
+// reaches the page is looked up here (whole string, or its " · "-separated parts) and swapped.
+// To add a string: write it in Ukrainian in the code, then add its English pair to EN (or EN_RE if it contains a variable).
+const LANG = window.LANG === 'en' ? 'en' : 'uk', LOC = LANG === 'en' ? 'en-GB' : 'uk-UA';
+const EN = {
+  // navigation, timer card
+  'Фокус': 'Focus', 'Сьогодні': 'Today', 'Усі завдання': 'All tasks', 'Статистика': 'Stats', 'Методи': 'Methods', 'Налаштування': 'Settings',
+  'одна справа за раз': 'one thing at a time',
+  'Додати': 'Add', 'Готовий почати?': 'Ready to start?', 'Над чим працюєш': 'What are you working on', 'Почати фокус': 'Start focus',
+  'Лише 5 хвилин': 'Just 5 minutes', 'Екран фокусу': 'Focus screen', 'Зупинити': 'Stop', 'Я відкладаю…': 'I\'m putting it off…',
+  'Перерва': 'Break', 'Без завдання': 'No task', 'Відійди від екрана': 'Step away from the screen', 'Згорнути': 'Minimise',
+  'Увімкнути музику': 'Music on', 'Вимкнути музику': 'Music off',
+  // today and task lists
+  'Що потрібно зробити сьогодні?': 'What needs doing today?', 'План порожній. Обери 1–3 справи — менше, але реально.': 'The plan is empty. Pick 1–3 things — fewer, but real.',
+  'Календар': 'Calendar', 'Завдання': 'Tasks', 'весь день': 'all day', 'перенесено': 'carried over', 'час настав': 'it\'s time',
+  'Додай час і перший крок': 'Add a time and a first step', 'Спершу → почати': 'First → start', 'дедлайн сьогодні': 'deadline today',
+  'На сьогодні': 'Today', 'На завтра': 'Tomorrow', 'Змінити': 'Edit', 'Виконано': 'Done',
+  'Нове завдання': 'New task', 'Змінити завдання': 'Edit task', 'Сьогодні та перенесені': 'Today and carried over', 'Заплановані': 'Planned',
+  'Без плану': 'Unplanned', 'Виконані': 'Done', 'Завдань ще немає.': 'No tasks yet.',
+  // stats
+  'Хвилини фокусу за 7 днів': 'Focus minutes over 7 days', 'Що і коли я робив сьогодні': 'What I did today, and when', 'Чому я відкладаю': 'Why I put things off',
+  'фокусу сьогодні': 'of focus today', 'за 7 днів': 'in 7 days', 'завдань виконано за тиждень': 'tasks done this week', 'днів поспіль із фокусом': 'days in a row with focus',
+  'Сьогодні ще не було сесій.': 'No sessions yet today.',
+  // habits
+  'Звички': 'Habits', 'Звичка': 'Habit', 'Нова звичка': 'New habit', 'Змінити звичку': 'Edit habit', 'звичка': 'habit', 'не пропусти двічі': 'never miss twice',
+  'мінімальна версія': 'minimal version', 'Мінімум': 'Minimum', 'Щодня': 'Every day', 'Звичок ще немає.': 'No habits yet.',
+  'Звичка — це завдання, що повторюється. У свої дні вона сама з\'являється в плані, нагадує про себе і має мінімальну версію на поганий день.': 'A habit is a task that repeats. On its days it shows up in the plan by itself, reminds you, and has a minimal version for a bad day.',
+  'Кружечки — останні 14 днів: зафарбований — виконано, наполовину — мінімальна версія, порожній — пропуск.': 'The dots are the last 14 days: filled — done, half — minimal version, empty — missed.',
+  'Що робити регулярно': 'What to do regularly', 'Напр.: читати конспект з матану': 'E.g. read calculus notes', 'Мінімальна версія': 'Minimal version',
+  '— зараховується в поганий день': '— counts on a bad day', 'Напр.: прочитати одну сторінку': 'E.g. read one page', 'Сигнал': 'Cue', '— після чого або де': '— after what, or where',
+  'Напр.: після сніданку': 'E.g. after breakfast', 'О котрій нагадати': 'Remind at', 'Дні': 'Days', 'Обери хоча б один день.': 'Pick at least one day.',
+  'Видалити цю звичку?': 'Delete this habit?',
+  // our own controls
+  'Копіювати': 'Copy', 'Скопійовано': 'Copied',
+  'Claude може додавати, змінювати й видаляти завдання та звички, розкладати їх по днях і часу, відмічати звички й показувати статистику. Для цього програма «Фокус» має бути запущена (хоча б у треї).': 'Claude can add, change and delete tasks and habits, schedule them by day and time, mark habits and show statistics. The Focus app has to be running for this (at least in the tray).',
+  'Claude Code — виконай у терміналі один раз': 'Claude Code — run once in a terminal',
+  'Claude Desktop — додай у файл claude_desktop_config.json і перезапусти Claude': 'Claude Desktop — add to claude_desktop_config.json and restart Claude',
+  'Потрібен встановлений Node.js. Ключ доступу програма зберігає сама — вводити його не треба.': 'Node.js must be installed. The app keeps the access key itself — no need to enter it.',
+  'Гаразд': 'OK', 'Замінити': 'Replace', 'не вказано': 'not set', 'Завтра': 'Tomorrow', 'Година': 'Hour', 'Хвилини': 'Minutes', 'Очистити': 'Clear', 'Готово': 'Done',
+  'Що блокувати під час фокусу': 'What to block during focus', 'Пошук програми': 'Search apps', 'Нічого не знайдено.': 'Nothing found.',
+  'Нотатка': 'Note', 'Нотатка за день': 'Note for the day', 'Що вийшло, що заважало': 'What worked, what got in the way', 'Не зроблено': 'Not done',
+  'Нотатка до звички': 'Note about the habit', 'Напр.: навіщо мені це, правила для себе': 'E.g. why I want this, my own rules',
+  'Кружечки — останні 5 тижнів: зафарбований — виконано, наполовину — мінімальна версія, порожній — пропуск. Натисни на день, щоб відмітити його або додати нотатку; крапка в кутку означає, що нотатка є.': 'The circles are the last 5 weeks: filled — done, half — minimal version, empty — missed. Tap a day to mark it or add a note; a dot in the corner means it has a note.',
+  'Звичка тримається на сигналі, а не на силі волі': 'A habit rests on a cue, not on willpower',
+  'Дія, прив\'язана до конкретного моменту («після сніданку відкриваю конспект»), з часом запускається сама. А мінімальна версія не дає одному поганому дню зламати все: пропустити можна, двічі поспіль — ні.': 'An action tied to a specific moment ("after breakfast I open my notes") starts to run by itself over time. And a minimal version keeps one bad day from breaking everything: you may miss once, but not twice in a row.',
+  'У додатку: вкладка «Звички»': 'In the app: the "Habits" tab',
+  'Коли натискатимеш «Я відкладаю…», тут з\'явиться твоя найчастіша причина.': 'Once you start pressing "I\'m putting it off…", your most common reason will show up here.',
+  // methods
+  'Чому це має працювати': 'Why this should work',
+  'Кожна частина додатка спирається на метод із досліджень прокрастинації.': 'Every part of the app rests on a method from procrastination research.',
+  'Прокрастинація — це про емоції, а не про лінь': 'Procrastination is about emotions, not laziness',
+  'Ми відкладаємо, щоб просто зараз уникнути неприємного відчуття: нудьги, тривоги, розгубленості. Тому спершу варто назвати, що саме відчуваєш.': 'We put things off to dodge an unpleasant feeling right now: boredom, anxiety, confusion. So the first step is to name what you feel.',
+  'У додатку: кнопка «Я відкладаю…»': 'In the app: the "I\'m putting it off…" button',
+  'План «коли → що»': 'A "when → what" plan',
+  'Рішення «о 14:00 відкриваю конспект» виконується значно частіше, ніж «повчуся сьогодні», бо не лишає місця для торгів із собою.': '"At 14:00 I open my notes" gets done far more often than "I\'ll study today", because it leaves no room to bargain with yourself.',
+  'У додатку: час і перший крок у кожному завданні': 'In the app: a time and a first step in every task',
+  'Крихітний перший крок': 'A tiny first step',
+  'Що більше і туманніше завдання, то менша віра, що впораєшся, і то сильніше хочеться втекти. Крок на 2–5 хвилин знімає цей бар\'єр.': 'The bigger and vaguer the task, the less you believe you can do it and the more you want to escape. A 2–5 minute step removes that barrier.',
+  'У додатку: поле «Перший крок»': 'In the app: the "First step" field',
+  'Правило п\'яти хвилин': 'The five-minute rule',
+  'Найважче — почати. Домовся з собою лише на 5 хвилин; після них зазвичай легше продовжити, ніж кинути.': 'Starting is the hard part. Agree with yourself on just 5 minutes; after that it is usually easier to keep going than to quit.',
+  'У додатку: кнопка «Лише 5 хвилин»': 'In the app: the "Just 5 minutes" button',
+  'Короткі відрізки з перервами': 'Short stretches with breaks',
+  'Обмежений у часі відрізок роботи робить фініш близьким, а нагороду (перерву) — швидкою.': 'A time-boxed stretch of work puts the finish line close and the reward (a break) soon.',
+  'У додатку: таймер фокусу': 'In the app: the focus timer',
+  'Самоспостереження': 'Self-monitoring',
+  'Запис того, що і коли ти реально робив, показує справжню картину і сам по собі підсилює контроль.': 'A record of what you really did and when shows the true picture, and that alone strengthens control.',
+  'У додатку: вкладка «Статистика»': 'In the app: the "Stats" tab',
+  'Самоспівчуття замість самокритики': 'Self-compassion instead of self-criticism',
+  'Сварити себе за відкладання — означає додати ще більше неприємних емоцій, від яких знову хочеться втекти. Зірвався — зафіксуй і зроби наступний маленький крок.': 'Scolding yourself for putting things off only adds more unpleasant feelings to run from. Slipped? Note it and take the next small step.',
+  'Прибери спокуси заздалегідь': 'Remove temptations in advance',
+  'Телефон в іншій кімнаті працює краще, ніж сила волі. Перед сесією закрий зайві вкладки і вимкни сповіщення.': 'A phone in another room works better than willpower. Before a session, close spare tabs and mute notifications.',
+  // settings
+  'Оформлення': 'Appearance', 'Мова': 'Language', 'Нуар': 'Noir', 'Афіша': 'Poster', 'Неон': 'Neon',
+  'Оформлення і мова запам\'ятовуються окремо на кожному пристрої.': 'Appearance and language are remembered separately on each device.',
+  'Блокування під час фокусу': 'Blocking during focus', 'Сайти': 'Sites', '— по одному в рядку': '— one per line', 'Програми': 'Programs', '— назва файлу': '— file name',
+  'Зберегти списки': 'Save lists', 'Списки збережено.': 'Lists saved.', 'На цьому телефоні': 'On this phone', 'Обрати програми': 'Choose apps', 'Увімкнути блокування': 'Turn on blocking',
+  'Програми закриває версія для ПК, сайти — розширення для браузера.': 'Programs are closed by the PC app, sites by the browser extension.',
+  'Ці списки діють у версії для ПК; тут їх можна лише редагувати.': 'These lists take effect in the PC app; here you can only edit them.',
+  'Службу блокування увімкнено.': 'The blocking service is on.',
+  'Службу блокування вимкнено — увімкни «Фокус» у спеціальних можливостях.': 'The blocking service is off — turn on "Фокус" in Accessibility settings.',
+  'Синхронізація з сервером': 'Sync with your server', 'Адреса сервера': 'Server address', 'Ключ доступу': 'Access key', 'Зберегти і синхронізувати': 'Save and sync',
+  'Без сервера додаток працює лише локально.': 'Without a server the app works only locally.',
+  'Синхронізацію вимкнено — додаток працює лише локально.': 'Sync is off — the app works only locally.', 'Синхронізую…': 'Syncing…',
+  'сервер недоступний': 'server unreachable', 'невірний ключ': 'wrong key',
+  'Google Календар': 'Google Calendar', 'Приватна адреса календаря у форматі iCal': 'Secret calendar address in iCal format', 'Зберегти на сервері': 'Save on the server',
+  'Адреса зберігається лише на сервері; порожнє поле вимикає календар.': 'The address is stored only on the server; an empty field turns the calendar off.',
+  'Календар підключено.': 'Calendar connected.', 'Календар ще не підключено.': 'Calendar not connected yet.', 'Спершу підключи сервер.': 'Connect the server first.',
+  'Таймер і дані': 'Timer and data', 'Нагадувати, коли настав час завдання': 'Remind me when a task is due', 'Запускати разом із Windows (у треї)': 'Start with Windows (in the tray)',
+  'Фокус, хв': 'Focus, min', 'Перерва, хв': 'Break, min', 'Зберегти копію даних': 'Save a backup', 'Відновити з копії': 'Restore from backup',
+  'Дані зберігаються лише в цьому браузері на цьому комп\'ютері.': 'Data is stored only in this browser on this computer.',
+  // task dialog
+  'Що потрібно зробити': 'What needs doing', 'Перший крок': 'First step', '— на 2–5 хвилин, максимально конкретний': '— 2–5 minutes, as concrete as possible',
+  'Напр.: відкрити методичку і прочитати умову': 'E.g. open the handout and read the task', 'День': 'Day', 'О котрій почну': 'Start at', 'Дедлайн': 'Deadline',
+  'Навіщо мені це': 'Why it matters to me', '— необов\'язково': '— optional', 'Напр.: закрию лабу і звільню вихідні': 'E.g. finish the lab and free up the weekend',
+  'Видалити': 'Delete', 'Скасувати': 'Cancel', 'Зберегти': 'Save', 'Видалити це завдання?': 'Delete this task?',
+  // "I'm putting it off" dialog
+  'Що зараз заважає почати?': 'What is stopping you right now?',
+  'Відкладати — нормально для людини. Назви причину, і підберемо наступний крок.': 'Putting things off is human. Name the reason and we will pick the next step.',
+  'Закрити': 'Close', 'Уточнити завдання': 'Refine the task', 'Почати на 5 хвилин': 'Start for 5 minutes',
+  'Не знаю, з чого почати': 'I don\'t know where to start',
+  'Не думай про все завдання — придумай лише найперший рух на 2 хвилини.': 'Don\'t think about the whole task — come up with only the very first 2-minute move.',
+  'Запиши його в поле «Перший крок» і зроби тільки його.': 'Write it in the "First step" field and do just that.',
+  'Завдання надто велике або страшне': 'The task is too big or scary',
+  'Тобі не треба закінчити сьогодні — треба лише відкусити шматок.': 'You don\'t have to finish today — only to take a bite.',
+  'Розбий завдання на 2–3 менших і заплануй на конкретний час лише перше.': 'Split the task into 2–3 smaller ones and schedule only the first for a specific time.',
+  'Нудно, не хочеться': 'It\'s boring, I don\'t feel like it',
+  'Згадай, навіщо тобі це, і пообіцяй собі щось приємне одразу після сесії.': 'Remember why you need this, and promise yourself something nice right after the session.',
+  'Домовся лише на 5 хвилин — після них дозволено зупинитися.': 'Agree on just 5 minutes — after that you are allowed to stop.',
+  'Тривожно, боюся зробити погано': 'I\'m anxious, afraid to do it badly',
+  'Перша версія має право бути поганою. Її завдання — існувати.': 'A first version is allowed to be bad. Its job is to exist.',
+  'Постав таймер на 5 хвилин і зроби навмисно чорновий варіант.': 'Set the timer for 5 minutes and make a deliberately rough draft.',
+  'Відволікаюся на телефон чи соцмережі': 'I get distracted by my phone or social media',
+  'Віднеси телефон в іншу кімнату — це надійніше за силу волі.': 'Take the phone to another room — more reliable than willpower.',
+  'Закрий усі вкладки, крім потрібної, і запусти коротку сесію.': 'Close every tab but the one you need and start a short session.',
+  'Втомився, немає сил': 'I\'m tired, no energy',
+  'Зроби 5–10 хвилин справжньої перерви без екрана: вода, вікно, розминка.': 'Take a real 5–10 minute break away from the screen: water, a window, a stretch.',
+  'Після неї — лише 5 хвилин роботи. Якщо сил справді немає, перенеси завдання на конкретний час, а не «на потім».': 'After it — just 5 minutes of work. If you really have no energy, move the task to a specific time, not to "later".',
+  // reminder and end-of-session dialogs, notifications, alerts
+  'За планом — зараз': 'On the plan — now', 'Не зараз': 'Not now', 'Через 10 хв': 'In 10 min', 'Час почати:': 'Time to start:',
+  'Почни з найменшого, що можна зробити за дві хвилини.': 'Start with the smallest thing you can do in two minutes.',
+  'Завдання виконано': 'Task done', 'Ще одна сесія': 'One more session', 'Перерва закінчилась': 'Break is over', 'Сесію завершено': 'Session finished',
+  'Час перепочити': 'Time for a break', 'Повертаємось до роботи': 'Back to work',
+  'Найважче — почати — вже позаду. Продовжиш, поки є розгін?': 'The hardest part — starting — is behind you. Keep going while you have momentum?',
+  'Гарна робота. Зроби коротку перерву без телефону.': 'Good work. Take a short break without your phone.', 'Готовий до наступної сесії?': 'Ready for the next session?',
+  'Таймер уже запущено. Спершу заверши поточну сесію.': 'A timer is already running. Finish the current session first.',
+  'Замінити поточні дані даними з файлу?': 'Replace the current data with the data from the file?', 'Це не схоже на файл копії Фокуса.': 'This does not look like a Focus backup file.',
+};
+// strings with a variable part
+const EN_RE = [
+  [/^Нотатка: (.*)$/, 'Note: $1'], [/^За 5 тижнів: виконано (\d+)$/, 'In 5 weeks: done $1'], [/^мінімум (\d+)$/, 'minimum $1'], [/^пропущено (\d+)$/, 'missed $1'],
+  [/^Мінімум: (.*)$/, 'Minimum: $1'],
+  [/^(?:Пн|Вт|Ср|Чт|Пт|Сб|Нд)(?: (?:Пн|Вт|Ср|Чт|Пт|Сб|Нд))*$/, m => m.split(' ').map(d => ({ Пн: 'Mon', Вт: 'Tue', Ср: 'Wed', Чт: 'Thu', Пт: 'Fri', Сб: 'Sat', Нд: 'Sun' })[d]).join(' ')],
+  [/^Зроблено (\d+) з (\d+)$/, 'Done $1 of $2'], [/^(\d+) хв фокусу сьогодні$/, '$1 min of focus today'], [/^(\d+) хв фокусу$/, '$1 min of focus'],
+  [/^(\d+) хв$/, '$1 min'], [/^О (\d\d:\d\d) → почати$/, 'At $1 → start'], [/^О (\d\d:\d\d) → (.*)$/, 'At $1 → $2'], [/^Спершу → (.*)$/, 'First → $1'],
+  [/^дедлайн минув (.*)$/, 'deadline passed $1'], [/^до дедлайну (\d+) дн\.$/, '$1 d to deadline'],
+  [/^Готово: (\d+) хв фокусу$/, 'Done: $1 min of focus'], [/^Перший крок: (.*)$/, 'First step: $1'],
+  [/^Синхронізовано о (.*)$/, 'Synced at $1'], [/^Немає синхронізації: (.*)$/, (m, x) => 'No sync: ' + tr(x)], [/^помилка сервера (\d+)$/, 'server error $1'],
+  [/^Не вдалося прочитати календар: (.*)$/, (m, x) => 'Could not read the calendar: ' + tr(x)], [/^Не збережено: (.*)$/, (m, x) => 'Not saved: ' + tr(x)],
+  [/^Вибрано програм: (\d+)\. (.*)$/, (m, n, x) => `Apps chosen: ${n}. ` + tr(x)],
+];
+function tr(s) {
+  if (LANG !== 'en' || typeof s !== 'string' || !/[\u0400-\u04FF]/.test(s)) return s;
+  const one = part => {
+    const k = part.trim(); if (!k) return part;
+    let out = EN[k];
+    if (out === undefined) for (const [re, to] of EN_RE) if (re.test(k)) { out = k.replace(re, to); break; }
+    return out === undefined ? part : part.replace(k, () => out);
+  };
+  return s.includes(' · ') ? s.split(' · ').map(one).join(' · ') : one(s); // parts first: a "(.*)" pattern must not swallow the next part
+}
+// Translate what is on the page now and everything that appears later.
+function trNode(n) {
+  if (n.nodeType === 3) { const v = n.nodeValue, w = tr(v); if (w !== v) n.nodeValue = w; }
+  else if (n.nodeType === 1 && !/^(SCRIPT|STYLE)$/.test(n.tagName)) {
+    for (const a of ['placeholder', 'aria-label', 'title']) { const v = n.getAttribute(a); if (v) { const w = tr(v); if (w !== v) n.setAttribute(a, w); } }
+    if (n.tagName !== 'TEXTAREA') n.childNodes.forEach(trNode); // its text is what the user typed
+  }
+}
+if (LANG === 'en') {
+  trNode(document.body);
+  new MutationObserver(list => { for (const m of list) { if (m.type === 'characterData') trNode(m.target); else m.addedNodes.forEach(trNode); } })
+    .observe(document.body, { subtree: true, childList: true, characterData: true });
+}
+document.title = tr('Фокус');
+function setLang(l) { try { localStorage.setItem('focus-app-v1-lang', l); } catch (e) {} location.reload(); }
+
+const KEY = 'focus-app-v1';
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const dstr = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => dstr(new Date());
+const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return dstr(d); };
+const hm = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const shortDate = s => { const [, m, d] = s.split('-'); return `${d}.${m}`; };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+const REASONS = {
+  start: { label: 'Не знаю, з чого почати', tips: ['Не думай про все завдання — придумай лише найперший рух на 2 хвилини.', 'Запиши його в поле «Перший крок» і зроби тільки його.'], edit: true },
+  big: { label: 'Завдання надто велике або страшне', tips: ['Тобі не треба закінчити сьогодні — треба лише відкусити шматок.', 'Розбий завдання на 2–3 менших і заплануй на конкретний час лише перше.'], edit: true },
+  boring: { label: 'Нудно, не хочеться', tips: ['Згадай, навіщо тобі це, і пообіцяй собі щось приємне одразу після сесії.', 'Домовся лише на 5 хвилин — після них дозволено зупинитися.'] },
+  anxious: { label: 'Тривожно, боюся зробити погано', tips: ['Перша версія має право бути поганою. Її завдання — існувати.', 'Постав таймер на 5 хвилин і зроби навмисно чорновий варіант.'] },
+  distract: { label: 'Відволікаюся на телефон чи соцмережі', tips: ['Віднеси телефон в іншу кімнату — це надійніше за силу волі.', 'Закрий усі вкладки, крім потрібної, і запусти коротку сесію.'] },
+  tired: { label: 'Втомився, немає сил', tips: ['Зроби 5–10 хвилин справжньої перерви без екрана: вода, вікно, розминка.', 'Після неї — лише 5 хвилин роботи. Якщо сил справді немає, перенеси завдання на конкретний час, а не «на потім».'], edit: true },
+};
+
+let S = load();
+function load() {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+  const st = { tasks: s.tasks || [], habits: s.habits || [], sessions: s.sessions || [], stuck: s.stuck || [], timer: s.timer || null,
+    settings: Object.assign({ focus: 25, brk: 5, remind: true }, s.settings),
+    blocklist: Object.assign({ sites: ['youtube.com', 'tiktok.com', 'instagram.com'], apps: [] }, s.blocklist), kvu: s.kvu || {} };
+  // every record carries `u` (last change time) so devices can merge: the newer one wins
+  st.tasks.forEach(t => t.u ??= t.created || 1);
+  st.sessions.forEach(x => x.u ??= x.end || 1);
+  st.stuck.forEach(x => { x.id ??= 'k' + x.at; x.u ??= x.at; });
+  return st;
+}
+function store() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} pushDesktop(); pushReminders(); }
+function save() { store(); queueSync(); }
+// tells the desktop shell (if we run inside it) whether to block distractions right now
+function pushDesktop() {
+  const T = S.timer;
+  const st = { active: !!T && T.kind === 'focus', endAt: T ? T.endAt : 0, title: T ? T.title : '',
+    sites: S.blocklist.sites, apps: S.blocklist.apps, lang: LANG };
+  window.desktop?.setFocus(st);                          // PC shell
+  window.AndroidBridge?.setFocus(JSON.stringify(st));    // Android shell
+}
+const task = id => S.tasks.find(t => t.id === id);
+const live = () => S.tasks.filter(t => !t.del);
+const focusMinOn = (day, taskId) => S.sessions
+  .filter(x => x.kind === 'focus' && dstr(new Date(x.start)) === day && (!taskId || x.taskId === taskId))
+  .reduce((a, x) => a + x.min, 0);
+
+/* ---------- rendering ---------- */
+function todayTasks() {
+  const t = today();
+  const list = live().filter(x => x.habitId ? x.planDate === t // a habit lives only on its own day: missed ones do not pile up
+    : x.done ? (x.doneAt && dstr(new Date(x.doneAt)) === t) : (x.planDate && x.planDate <= t));
+  return list.sort((a, b) => (a.done - b.done) || (a.planTime || '99').localeCompare(b.planTime || '99'));
+}
+function rowHTML(t, extra) {
+  const now = new Date(), td = today(), bits = [];
+  let tag = '';
+  if (!t.done) {
+    if (!t.habitId && t.planDate && t.planDate < td) tag = '<span class="tag">перенесено</span>';
+    else if (t.planDate === td && t.planTime && t.planTime <= `${pad(now.getHours())}:${pad(now.getMinutes())}` && !focusMinOn(td, t.id)) tag = '<span class="tag">час настав</span>';
+  }
+  const h = t.habitId && habit(t.habitId);
+  if (h) tag = '<span class="tag habit">звичка</span>' + (!t.done && missedLast(h) ? '<span class="tag">не пропусти двічі</span>' : '') + tag;
+  if (t.planTime || t.firstStep) bits.push(`${t.planTime ? 'О ' + esc(t.planTime) : 'Спершу'} → ${esc(t.firstStep || 'почати')}`);
+  else if (!t.done && !t.habitId) bits.push('Додай час і перший крок');
+  if (h && h.cue) bits.push(esc(h.cue));
+  if (t.habitId && t.done && t.mini) bits.push('мінімальна версія');
+  if (extra && t.planDate && t.planDate !== td) bits.push(shortDate(t.planDate));
+  const m = S.sessions.filter(x => x.kind === 'focus' && x.taskId === t.id).reduce((a, x) => a + x.min, 0);
+  if (m) bits.push(`${m} хв фокусу`);
+  if (t.deadline && !t.done) {
+    const left = Math.round((new Date(t.deadline) - new Date(td)) / 864e5);
+    bits.push(left < 0 ? `дедлайн минув ${shortDate(t.deadline)}` : left === 0 ? 'дедлайн сьогодні' : `до дедлайну ${left} дн.`);
+  }
+  let btns = '';
+  if (!t.done) {
+    if (extra) {
+      if (t.planDate !== td) btns += `<button class="btn small" data-act="plan" data-day="0" data-id="${t.id}">На сьогодні</button>`;
+      btns += `<button class="btn small" data-act="plan" data-day="1" data-id="${t.id}">На завтра</button>`;
+    } else btns += `<button class="btn small primary" data-act="focusTask" data-id="${t.id}">Фокус</button>`
+      + (t.habitId && t.firstStep ? `<button class="btn small" data-act="mini" data-id="${t.id}">Мінімум</button>` : '');
+  }
+  btns += t.habitId ? `<button class="btn small ghost" data-act="habitDay" data-id="${t.habitId}" data-date="${t.planDate}">Нотатка</button><button class="btn small ghost" data-act="editHabit" data-id="${t.habitId}">Змінити</button>`
+    : `<button class="btn small ghost" data-act="edit" data-id="${t.id}">Змінити</button>`;
+  return `<li class="task ${t.done ? 'done' : ''}">
+    <input type="checkbox" data-act="toggle" data-id="${t.id}" ${t.done ? 'checked' : ''} aria-label="Виконано">
+    <div class="t-main"><div class="t-title">${esc(t.title)}${tag}</div><div class="t-sub">${bits.join(' · ')}</div>${t.habitId && t.note ? `<div class="t-sub h-note">Нотатка: ${esc(t.note)}</div>` : ''}</div>
+    <div class="t-btns">${btns}</div></li>`;
+}
+function renderToday() {
+  materializeHabits();
+  const d = new Date();
+  $('todayDate').textContent = d.toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^./, c => c.toUpperCase());
+  const list = todayTasks(), done = list.filter(t => t.done).length;
+  $('todaySummary').textContent = list.length
+    ? `Зроблено ${done} з ${list.length} · ${focusMinOn(today())} хв фокусу сьогодні`
+    : 'План порожній. Обери 1–3 справи — менше, але реально.';
+  $('todayList').innerHTML = list.map(t => rowHTML(t)).join('');
+  const ev = CAL.filter(e => e.date === today());
+  $('calBox').innerHTML = ev.length ? '<h3>Календар</h3><ul class="log">' + ev.map(e =>
+    `<li><time>${e.allDay ? 'весь день' : esc(e.start) + (e.end ? '–' + esc(e.end) : '')}</time><span>${esc(e.title)}${e.location ? ' · ' + esc(e.location) : ''}</span></li>`).join('') + '</ul><h3>Завдання</h3>' : '';
+  const sel = $('timerSelect'), cur = sel.value;
+  sel.innerHTML = list.filter(t => !t.done).map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('') + '<option value="">Без завдання</option>';
+  if (selTouched && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+  sel.refresh?.(); // our drop-down mirrors the hidden <select>
+}
+let selTouched = false;
+$('timerSelect').onchange = () => { selTouched = true; };
+function renderTasks() {
+  const td = today(), open = live().filter(t => !t.done && !t.habitId);
+  const groups = [
+    ['Сьогодні та перенесені', open.filter(t => t.planDate && t.planDate <= td)],
+    ['Заплановані', open.filter(t => t.planDate > td).sort((a, b) => a.planDate.localeCompare(b.planDate))],
+    ['Без плану', open.filter(t => !t.planDate)],
+    ['Виконані', live().filter(t => t.done && !t.habitId).sort((a, b) => b.doneAt - a.doneAt).slice(0, 15)],
+  ];
+  $('allTasks').innerHTML = groups.filter(g => g[1].length).map(([name, arr]) =>
+    `<h3>${name}</h3><ul class="tasks">${arr.map(t => rowHTML(t, true)).join('')}</ul>`).join('')
+    || '<div class="empty">Завдань ще немає.</div>';
+}
+function renderStats() {
+  const td = today(), days = [];
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+  const mins = days.map(d => focusMinOn(dstr(d)));
+  let streak = 0;
+  for (let i = focusMinOn(td) ? 0 : 1; focusMinOn(addDays(-i)); i++) streak++;
+  const weekAgo = Date.now() - 7 * 864e5;
+  const tiles = [
+    [mins[6] + ' хв', 'фокусу сьогодні'],
+    [mins.reduce((a, b) => a + b, 0) + ' хв', 'за 7 днів'],
+    [live().filter(t => t.done && t.doneAt > weekAgo).length, 'завдань виконано за тиждень'],
+    [streak, 'днів поспіль із фокусом'],
+  ];
+  $('statTiles').innerHTML = tiles.map(([v, l]) => `<div class="stat"><b>${v}</b><span class="muted">${l}</span></div>`).join('');
+  const max = Math.max(60, ...mins);
+  $('week').innerHTML = days.map((d, i) => `<div title="${mins[i]} хв">${mins[i] || ''}<i style="height:${mins[i] / max * 100}%"></i><span>${d.toLocaleDateString(LOC, { weekday: 'short' })}</span></div>`).join('');
+  const log = S.sessions.filter(x => dstr(new Date(x.start)) === td).sort((a, b) => a.start - b.start);
+  $('log').innerHTML = log.map(x => `<li><time>${hm(x.start)}–${hm(x.end)}</time><span>${x.kind === 'break' ? 'Перерва' : esc(x.title || 'Без завдання')} · ${x.min} хв</span></li>`).join('')
+    || '<li class="muted">Сьогодні ще не було сесій.</li>';
+  const counts = {};
+  S.stuck.forEach(x => counts[x.reason] = (counts[x.reason] || 0) + 1);
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  $('reasonStats').innerHTML = rows.length
+    ? '<ul class="log">' + rows.map(([k, n]) => `<li><time>${n}×</time><span>${REASONS[k]?.label || k}</span></li>`).join('') + '</ul>'
+    : '<div class="muted">Коли натискатимеш «Я відкладаю…», тут з\'явиться твоя найчастіша причина.</div>';
+}
+function render() { renderToday(); renderTasks(); renderHabits(); renderStats(); renderTimer(); }
+
+/* ---------- habits: repeating tasks with a cue and a minimal version ---------- */
+// A habit is a template. On each of its days it puts an ordinary task into the plan (id "h:<habit>:<date>"),
+// so reminders, focus sessions and blocking work for it exactly as for any other task.
+const habit = id => S.habits.find(h => h.id === id);
+const habits = () => S.habits.filter(h => !h.del);
+const instId = (h, date) => `h:${h.id}:${date}`;
+const habitOn = (h, date) => h.days.includes(new Date(date + 'T12:00').getDay());
+const WEEK = [[1, 'Пн'], [2, 'Вт'], [3, 'Ср'], [4, 'Чт'], [5, 'Пт'], [6, 'Сб'], [0, 'Нд']];
+// 'full' | 'mini' | 'miss' | 'wait' (today, not done yet) | 'off' (not a day for this habit)
+function habitState(h, date) {
+  if (!habitOn(h, date) || date < dstr(new Date(h.created))) return 'off';
+  const t = task(instId(h, date));
+  if (t && !t.del && t.done) return t.mini ? 'mini' : 'full';
+  return date === today() ? 'wait' : 'miss';
+}
+// "never miss twice": the previous day of this habit was missed, so today matters more than usual
+function missedLast(h) {
+  for (let i = 1; i <= 7; i++) { const s = habitState(h, addDays(-i)); if (s !== 'off') return s === 'miss'; }
+  return false;
+}
+function materializeHabits() {
+  const td = today(), dayStart = new Date(td + 'T00:00').getTime();
+  let made = false;
+  for (const h of habits()) {
+    if (!habitOn(h, td) || task(instId(h, td))) continue;
+    // `u` is the start of the day, not "now": every device creates the same record, and a real change on any of them wins
+    S.tasks.push({ id: instId(h, td), habitId: h.id, title: h.title, firstStep: h.mini || '', why: '', planDate: td, planTime: h.time || '',
+      deadline: '', done: false, doneAt: null, mini: false, created: dayStart, u: dayStart });
+    made = true;
+  }
+  if (made) save();
+}
+// keeps today's not-yet-done task in step with an edited or deleted habit
+function syncInstance(h) {
+  const td = today(), t = task(instId(h, td));
+  if (!t || t.done) return;
+  Object.assign(t, { title: h.title, firstStep: h.mini || '', planTime: h.time || '', del: !!h.del || !habitOn(h, td), u: Date.now() });
+}
+function renderHabits() {
+  const list = habits();
+  $('habitList').innerHTML = list.length ? '<ul class="tasks">' + list.map(h => {
+    const bits = [h.days.length === 7 ? 'Щодня' : WEEK.filter(([d]) => h.days.includes(d)).map(([, name]) => name).join(' ')];
+    if (h.time) bits.push(h.time);
+    if (h.cue) bits.push(esc(h.cue));
+    // five weeks, Monday first, ending with the current week; days after today stay blank
+    const td = today(), back = (new Date().getDay() + 6) % 7 + 28, count = { full: 0, mini: 0, miss: 0 }, noted = [];
+    let dots = '<div class="cal">' + WEEK.map(([, name]) => `<span>${name}</span>`).join('');
+    for (let i = back; i > back - 35; i--) {
+      const d = addDays(-i), s = d > td ? 'future' : habitState(h, d), t = task(instId(h, d)), note = t && !t.del && t.note;
+      if (s in count) count[s]++;
+      if (note) noted.push([d, note]);
+      dots += `<button class="cell ${s}${note ? ' noted' : ''}" data-act="habitDay" data-id="${h.id}" data-date="${d}" ${s === 'off' || s === 'future' ? 'disabled' : ''}>${+d.slice(8)}</button>`;
+    }
+    dots += `</div><div class="t-sub" style="margin-top:8px">За 5 тижнів: виконано ${count.full} · мінімум ${count.mini} · пропущено ${count.miss}</div>`;
+    if (noted.length) dots += '<ul class="log h-notes">' + noted.reverse().slice(0, 5).map(([d, n]) => `<li><time>${shortDate(d)}</time><span>${esc(n)}</span></li>`).join('') + '</ul>';
+    const warn = habitState(h, today()) === 'wait' && missedLast(h) ? '<span class="tag">не пропусти двічі</span>' : '';
+    return `<li class="task"><div class="t-main"><div class="t-title">${esc(h.title)}${warn}</div>
+      <div class="t-sub">${bits.join(' · ')}</div>${h.mini ? `<div class="t-sub">Мінімум: ${esc(h.mini)}</div>` : ''}${h.note ? `<div class="t-sub h-note">${esc(h.note)}</div>` : ''}
+      ${dots}</div>
+      <div class="t-btns"><button class="btn small ghost" data-act="editHabit" data-id="${h.id}">Змінити</button></div></li>`;
+  }).join('') + '</ul>' : '<div class="empty">Звичок ще немає.</div>';
+}
+let dayCtx = null;
+const paintDay = () => document.querySelectorAll('#dayState [data-state]').forEach(b => b.classList.toggle('primary', b.dataset.state === dayCtx.state));
+function openDay(habitId, date) {
+  const h = habit(habitId); if (!h) return;
+  const t = task(instId(h, date)), state = t && !t.del && t.done ? (t.mini ? 'mini' : 'full') : 'none';
+  dayCtx = { h, date, state, was: state, note: (t && !t.del && t.note) || '' };
+  $('dayDate').textContent = new Date(date + 'T12:00').toLocaleDateString(LOC, { weekday: 'long', day: 'numeric', month: 'long' });
+  $('dayTitle').textContent = h.title;
+  $('dayNote').value = dayCtx.note;
+  paintDay();
+  $('dlgDay').showModal();
+}
+$('dayState').onclick = e => { const b = e.target.closest('[data-state]'); if (b) { dayCtx.state = b.dataset.state; paintDay(); } };
+$('daySave').onclick = () => {
+  const { h, date, state, was, note } = dayCtx, text = $('dayNote').value.trim();
+  $('dlgDay').close();
+  if (state === was && text === note) return;
+  let t = task(instId(h, date));
+  if (!t) { // a past or not-yet-shown day: its task is created on demand
+    t = { id: instId(h, date), habitId: h.id, title: h.title, firstStep: h.mini || '', why: '', planDate: date, planTime: h.time || '', deadline: '', created: Date.now() };
+    S.tasks.push(t);
+  }
+  const done = state !== 'none';
+  const doneAt = !done ? null : state === was && t.doneAt ? t.doneAt : date === today() ? Date.now() : new Date(date + 'T12:00').getTime();
+  Object.assign(t, { del: false, done, mini: state === 'mini', doneAt, note: text, u: Date.now() });
+  save(); render();
+};
+let habitEditId = null;
+function openHabit(id) {
+  habitEditId = id;
+  const h = id ? habit(id) : { title: '', mini: '', cue: '', time: '', days: [0, 1, 2, 3, 4, 5, 6] };
+  $('habitDlgTitle').textContent = id ? 'Змінити звичку' : 'Нова звичка';
+  $('hTitle').value = h.title; $('hMini').value = h.mini || ''; $('hCue').value = h.cue || ''; $('hTime').value = h.time || ''; $('hNote').value = h.note || ''; refreshPicks();
+  $('hDays').innerHTML = WEEK.map(([d, name]) => `<label><input type="checkbox" value="${d}" ${h.days.includes(d) ? 'checked' : ''}>${name}</label>`).join('');
+  $('hDelete').hidden = !id;
+  $('dlgHabit').showModal();
+  if (!id) $('hTitle').focus();
+}
+$('habitForm').addEventListener('submit', e => {
+  const data = { title: $('hTitle').value.trim(), mini: $('hMini').value.trim(), cue: $('hCue').value.trim(), time: $('hTime').value, note: $('hNote').value.trim(),
+    days: [...$('hDays').querySelectorAll('input:checked')].map(i => +i.value), u: Date.now() };
+  if (!data.title) return;
+  if (!data.days.length) { e.preventDefault(); tell('Обери хоча б один день.'); return; }
+  let h = habitEditId && habit(habitEditId);
+  if (h) Object.assign(h, data); else { h = Object.assign({ id: uid(), created: Date.now() }, data); S.habits.push(h); }
+  syncInstance(h); save(); render();
+});
+$('hDelete').onclick = async () => {
+  if (!await ask('Видалити цю звичку?', 'Видалити')) return;
+  const h = habit(habitEditId);
+  Object.assign(h, { del: true, u: Date.now() });
+  syncInstance(h); save(); $('dlgHabit').close(); render();
+};
+
+/* ---------- tasks ---------- */
+let editId = null;
+function openTask(id, preset) {
+  editId = id;
+  const t = id ? task(id) : Object.assign({ title: '', firstStep: '', why: '', planDate: today(), planTime: '', deadline: '' }, preset);
+  $('taskDlgTitle').textContent = id ? 'Змінити завдання' : 'Нове завдання';
+  $('fTitle').value = t.title; $('fStep').value = t.firstStep || ''; $('fWhy').value = t.why || '';
+  $('fDate').value = t.planDate || ''; $('fTime').value = t.planTime || ''; $('fDeadline').value = t.deadline || ''; refreshPicks();
+  $('fDelete').hidden = !id;
+  $('dlgTask').showModal();
+  (t.title ? $('fStep') : $('fTitle')).focus();
+}
+$('taskForm').addEventListener('submit', () => {
+  const data = { title: $('fTitle').value.trim(), firstStep: $('fStep').value.trim(), why: $('fWhy').value.trim(),
+    planDate: $('fDate').value, planTime: $('fTime').value, deadline: $('fDeadline').value };
+  if (!data.title) return;
+  data.u = Date.now();
+  if (editId) Object.assign(task(editId), data);
+  else S.tasks.push(Object.assign({ id: uid(), done: false, doneAt: null, created: Date.now() }, data));
+  save(); render();
+});
+$('fDelete').onclick = async () => {
+  if (!await ask('Видалити це завдання?', 'Видалити')) return;
+  Object.assign(task(editId), { del: true, u: Date.now() }); // kept as a marker so other devices delete it too
+  save(); $('dlgTask').close(); render();
+};
+$('quickAdd').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = $('quickTitle').value.trim();
+  if (!title) return;
+  $('quickTitle').value = '';
+  openTask(null, { title });
+});
+function setDone(t, v) { if (!t) return; if (t.habitId) t.mini = false; t.done = v; t.doneAt = v ? Date.now() : null; t.u = Date.now(); save(); render(); }
+
+/* ---------- timer ---------- */
+let wasRunning = false;
+function startTimer(kind, min, taskId) {
+  const t = taskId ? task(taskId) : null;
+  S.timer = { kind, min, taskId: t ? t.id : '', title: t ? t.title : '', startAt: Date.now(), endAt: Date.now() + min * 60000 };
+  S.kvu.timer = Date.now();
+  save(); renderTimer();
+  if (kind === 'focus') { openFocus(); if (musicWanted) { Music.start(); gramUI(); } }
+  try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+}
+function endTimer(completed) {
+  const T = S.timer; if (!T) return;
+  const end = Math.min(Date.now(), T.endAt);
+  const min = completed ? T.min : Math.floor((end - T.startAt) / 60000);
+  const sid = 's' + T.startAt; // same id on every device, so one timer never logs twice
+  if (min >= 1 && !S.sessions.some(x => x.id === sid))
+    S.sessions.push({ id: sid, kind: T.kind, taskId: T.taskId, title: T.title, start: T.startAt, end, min, u: Date.now() });
+  S.timer = null; S.kvu.timer = Date.now(); save(); render();
+  if (!completed) return;
+  beep();
+  const focus = T.kind === 'focus';
+  try { if (window.Notification && Notification.permission === 'granted') new Notification(tr(focus ? 'Сесію завершено' : 'Перерва закінчилась'), { body: focus ? T.title || tr('Час перепочити') : tr('Повертаємось до роботи') }); } catch (e) {}
+  $('doneTitle').textContent = focus ? `Готово: ${T.min} хв фокусу` : 'Перерва закінчилась';
+  $('doneText').textContent = focus
+    ? (T.min <= 5 ? 'Найважче — почати — вже позаду. Продовжиш, поки є розгін?' : 'Гарна робота. Зроби коротку перерву без телефону.')
+    : 'Готовий до наступної сесії?';
+  $('doneBreak').hidden = !focus;
+  $('doneFinish').hidden = !(focus && T.taskId && task(T.taskId) && !task(T.taskId).done);
+  $('doneBreak').onclick = () => { $('dlgDone').close(); startTimer('break', S.settings.brk); };
+  $('doneMore').onclick = () => { $('dlgDone').close(); startTimer('focus', S.settings.focus, T.taskId || $('timerSelect').value); };
+  $('doneFinish').onclick = () => { $('dlgDone').close(); setDone(task(T.taskId), true); };
+  if (!$('dlgDone').open) $('dlgDone').showModal();
+}
+function renderTimer() {
+  const T = S.timer;
+  $('timerIdle').hidden = !!T; $('timerRun').hidden = !T;
+  if (!T) {
+    $('clock').textContent = `${pad(S.settings.focus)}:00`;
+    $('timerLabel').textContent = 'Готовий почати?';
+    $('timerTask').textContent = ''; $('timerBar').style.width = '0';
+    if (wasRunning) document.title = tr('Фокус');
+    wasRunning = false; focusScreen(null); return;
+  }
+  wasRunning = true;
+  const left = Math.max(0, T.endAt - Date.now()), sec = Math.ceil(left / 1000);
+  const txt = `${pad(Math.floor(sec / 60))}:${pad(sec % 60)}`;
+  $('clock').textContent = txt;
+  $('timerLabel').textContent = T.kind === 'focus' ? 'Фокус' : 'Перерва';
+  const t = T.taskId && task(T.taskId);
+  $('timerTask').textContent = T.kind === 'break' ? 'Відійди від екрана' : (T.title ? T.title + (t && t.firstStep ? ' → ' + t.firstStep : '') : 'Без завдання');
+  $('timerBar').style.width = (100 - left / (T.min * 60000) * 100) + '%';
+  document.title = `${txt} · ${tr(T.kind === 'focus' ? 'Фокус' : 'Перерва')}`;
+  focusScreen(T, left, txt);
+  if (left <= 0) endTimer(true);
+}
+setInterval(() => { if (S.timer) renderTimer(); }, 500);
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.25, 0.5].forEach((at, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = [660, 880, 1100][i]; o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.2, ctx.currentTime + at);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + at + 0.22);
+      o.start(ctx.currentTime + at); o.stop(ctx.currentTime + at + 0.23);
+    });
+  } catch (e) {}
+}
+
+/* ---------- "I'm procrastinating" ---------- */
+function openStuck() {
+  const id = $('timerSelect').value;
+  $('reasons').innerHTML = Object.entries(REASONS).map(([k, r]) => `<button class="btn" data-reason="${k}">${r.label}</button>`).join('');
+  $('reasons').hidden = false; $('advice').hidden = true; $('stuckGo').hidden = true; $('stuckEdit').hidden = true;
+  $('reasons').onclick = e => {
+    const k = e.target.dataset.reason; if (!k) return;
+    const r = REASONS[k];
+    S.stuck.push({ id: uid(), u: Date.now(), at: Date.now(), reason: k, taskId: id }); save(); renderStats();
+    $('reasons').hidden = true;
+    $('advice').innerHTML = `<b>${r.label}</b><ul>${r.tips.map(x => `<li>${x}</li>`).join('')}</ul>`;
+    $('advice').hidden = false;
+    $('stuckGo').hidden = !!S.timer;
+    $('stuckEdit').hidden = !(r.edit && id);
+  };
+  $('stuckGo').onclick = () => { $('dlgStuck').close(); startTimer('focus', 5, id); };
+  $('stuckEdit').onclick = () => { $('dlgStuck').close(); openTask(id); };
+  $('dlgStuck').showModal();
+}
+
+/* ---------- events ---------- */
+function show(view) {
+  document.querySelectorAll('main > section').forEach(s => s.hidden = s.id !== 'v-' + view);
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+}
+$('nav').onclick = e => { if (e.target.dataset.view) { show(e.target.dataset.view); render(); } };
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const id = el.dataset.id, t = id && task(id);
+  switch (el.dataset.act) {
+    case 'toggle': setDone(t, el.checked); break;
+    case 'edit': openTask(id); break;
+    case 'new': openTask(null); break;
+    case 'newHabit': openHabit(null); break;
+    case 'editHabit': openHabit(id); break;
+    case 'habitDay': openDay(id, el.dataset.date); break;
+    case 'mini': Object.assign(t, { done: true, mini: true, doneAt: Date.now(), u: Date.now() }); save(); render(); break; // the minimal version counts
+    case 'plan': t.planDate = addDays(+el.dataset.day); t.u = Date.now(); save(); render(); break;
+    case 'theme': setTheme(el.dataset.themePick); break;
+    case 'lang': if (el.dataset.lang !== LANG) setLang(el.dataset.lang); break;
+    case 'music': toggleMusic(); break;
+    case 'focusOpen': openFocus(); break;
+    case 'focusMin': closeFocus(); break;
+    case 'syncNow': saveSyncForm(); break;
+    case 'saveCal': saveCal(); break;
+    case 'saveBlock': saveBlock(); break;
+    case 'copy': {
+      const label = el.textContent;
+      navigator.clipboard.writeText($(el.dataset.from).textContent).then(() => { el.textContent = tr('Скопійовано'); setTimeout(() => el.textContent = label, 1500); });
+      break;
+    }
+    case 'pickApps': openApps(); break;
+    case 'openAcc': window.AndroidBridge?.openAccessibility(); break;
+    case 'focusTask':
+      if (S.timer) { tell('Таймер уже запущено. Спершу заверши поточну сесію.'); break; }
+      startTimer('focus', S.settings.focus, id); window.scrollTo({ top: 0, behavior: 'smooth' }); break;
+    case 'start': startTimer('focus', S.settings.focus, $('timerSelect').value); break;
+    case 'start5': startTimer('focus', 5, $('timerSelect').value); break;
+    case 'stop': endTimer(false); break;
+    case 'stuck': openStuck(); break;
+    case 'closeDlg': el.closest('dialog').close(); break;
+    case 'export': {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
+      a.download = `focus-${today()}.json`; a.click(); URL.revokeObjectURL(a.href); break;
+    }
+    case 'import': $('importFile').click(); break;
+  }
+});
+$('importFile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!Array.isArray(d.tasks)) throw 0;
+    if (!await ask('Замінити поточні дані даними з файлу?', 'Замінити')) return;
+    localStorage.setItem(KEY, JSON.stringify(d)); S = load(); SY.pushedAt = 0; initSettings(); render(); save();
+  } catch (err) { tell('Це не схоже на файл копії Фокуса.'); }
+  e.target.value = '';
+};
+function initSettings() {
+  $('setFocus').value = S.settings.focus; $('setBreak').value = S.settings.brk; $('setRemind').checked = !!S.settings.remind;
+  $('blockSites').value = S.blocklist.sites.join('\n'); $('blockApps').value = S.blocklist.apps.join('\n');
+  $('syncUrl').value = SY.url; $('syncToken').value = SY.token;
+  $('blockNote').textContent = window.desktop
+    ? 'Програми закриває версія для ПК, сайти — розширення для браузера.'
+    : 'Ці списки діють у версії для ПК; тут їх можна лише редагувати.';
+  phoneNote();
+}
+// Android only: which phone apps to block is chosen on the phone itself
+function phoneNote() {
+  const A = window.AndroidBridge;
+  $('phoneBlock').hidden = !A;
+  if (!A) return;
+  $('phoneNote').textContent = `Вибрано програм: ${A.blockedCount()}. ` + (A.blockingEnabled()
+    ? 'Службу блокування увімкнено.'
+    : 'Службу блокування вимкнено — увімкни «Фокус» у спеціальних можливостях.');
+}
+$('setFocus').onchange = e => { S.settings.focus = Math.min(120, Math.max(5, +e.target.value || 25)); S.kvu.settings = Date.now(); save(); initSettings(); renderTimer(); };
+$('setBreak').onchange = e => { S.settings.brk = Math.min(60, Math.max(1, +e.target.value || 5)); S.kvu.settings = Date.now(); save(); initSettings(); };
+function saveBlock() {
+  const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
+  S.blocklist = {
+    sites: [...new Set(lines('blockSites').map(x => x.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]))],
+    apps: [...new Set(lines('blockApps').filter(x => /^[\w .()+-]+\.exe$/i.test(x)))],
+  };
+  S.kvu.blocklist = Date.now(); save(); initSettings();
+  $('blockNote').textContent = 'Списки збережено.';
+}
+
+/* ---------- sync with your own server ---------- */
+const KV = ['timer', 'settings', 'blocklist'];
+let SY = (() => {
+  let c = {};
+  try { c = JSON.parse(localStorage.getItem(KEY + '-sync')) || {}; } catch (e) {}
+  return Object.assign({ url: location.protocol.startsWith('http') ? location.origin : '', token: '', rev: 0, pushedAt: 0 }, c);
+})();
+const storeSync = () => {
+  try { localStorage.setItem(KEY + '-sync', JSON.stringify(SY)); } catch (e) {}
+  window.AndroidBridge?.setServer(SY.url, SY.token); // lets the phone ask the server about sessions started on the PC
+};
+const syncStatus = t => { $('syncStatus').textContent = t; };
+async function api(path, opts = {}) {
+  const r = await fetch(SY.url.replace(/\/+$/, '') + path, Object.assign({}, opts,
+    { headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + SY.token } }));
+  if (!r.ok) throw new Error(r.status === 401 ? 'невірний ключ' : 'помилка сервера ' + r.status);
+  return r.json();
+}
+let syncing = false, syncT;
+function queueSync() { clearTimeout(syncT); syncT = setTimeout(sync, 1200); }
+async function sync() {
+  if (!SY.url || !SY.token || syncing) return;
+  syncing = true;
+  const t0 = Date.now(), newer = r => r.u >= SY.pushedAt;
+  const changes = { tasks: S.tasks.filter(newer), habits: S.habits.filter(newer), sessions: S.sessions.filter(newer), stuck: S.stuck.filter(newer),
+    kv: KV.filter(k => (S.kvu[k] || 0) >= SY.pushedAt && S.kvu[k]).map(k => ({ id: k, u: S.kvu[k], v: S[k] })) };
+  try {
+    const res = await api('/api/sync', { method: 'POST', body: JSON.stringify({ since: SY.rev, changes }) });
+    let changed = false;
+    for (const col of ['tasks', 'habits', 'sessions', 'stuck']) for (const r of res.changes[col] || []) { // "|| []": an older server knows no habits
+      const i = S[col].findIndex(x => x.id === r.id);
+      if (i < 0) { S[col].push(r); changed = true; } else if (r.u > S[col][i].u) { S[col][i] = r; changed = true; }
+    }
+    for (const r of res.changes.kv) if (KV.includes(r.id) && r.u > (S.kvu[r.id] || 0) && (r.v || r.id === 'timer')) {
+      S[r.id] = r.v; S.kvu[r.id] = r.u; changed = true;
+    }
+    if (SY.epoch && res.epoch && SY.epoch !== res.epoch) {
+      // the server's database was recreated: next time send and fetch everything
+      SY.rev = 0; SY.pushedAt = 0; SY.epoch = res.epoch; storeSync(); queueSync();
+    } else { SY.rev = res.rev; SY.pushedAt = t0; SY.epoch = res.epoch; storeSync(); }
+    syncStatus('Синхронізовано о ' + hm(Date.now()));
+    if (changed) { store(); if (!document.querySelector('dialog[open]') && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName)) initSettings(); render(); }
+  } catch (e) { syncStatus('Немає синхронізації: ' + (e.message === 'Failed to fetch' ? 'сервер недоступний' : e.message)); }
+  syncing = false;
+}
+function saveSyncForm() {
+  const url = $('syncUrl').value.trim(), token = $('syncToken').value.trim();
+  if (url !== SY.url) { SY.rev = 0; SY.pushedAt = 0; SY.epoch = ''; } // another server: send and fetch everything again
+  SY.url = url; SY.token = token; storeSync();
+  if (!url || !token) return syncStatus('Синхронізацію вимкнено — додаток працює лише локально.');
+  syncStatus('Синхронізую…'); busy(true); sync().then(loadCal).finally(() => busy(false));
+}
+
+/* ---------- calendar (read through the server) ---------- */
+let CAL = [];
+try { CAL = JSON.parse(localStorage.getItem(KEY + '-cal')) || []; } catch (e) {}
+async function loadCal() {
+  if (!SY.url || !SY.token) return;
+  try {
+    const r = await api(`/api/calendar?from=${today()}&to=${addDays(1)}`);
+    CAL = r.events;
+    try { localStorage.setItem(KEY + '-cal', JSON.stringify(CAL)); } catch (e) {}
+    $('calStatus').textContent = r.configured ? 'Календар підключено.' : 'Календар ще не підключено.';
+    renderToday();
+  } catch (e) { $('calStatus').textContent = 'Не вдалося прочитати календар: ' + e.message; }
+}
+async function saveCal() {
+  if (!SY.url || !SY.token) return void ($('calStatus').textContent = 'Спершу підключи сервер.');
+  try {
+    await api('/api/config', { method: 'PUT', body: JSON.stringify({ icalUrl: $('calUrl').value.trim() }) });
+    $('calUrl').value = ''; loadCal();
+  } catch (e) { $('calStatus').textContent = 'Не збережено: ' + e.message; }
+}
+
+/* ---------- reminders: "at 14:00 I open the notes" only works if 14:00 actually interrupts you ---------- */
+const REM_WINDOW = 60 * 60000; // a reminder that could not fire for an hour (app closed, focus running) is dropped
+let REM = {}; // per device: "taskId|date|time" -> { done: true } or { snooze: ms }
+try { REM = JSON.parse(localStorage.getItem(KEY + '-rem')) || {}; } catch (e) {}
+const remKey = t => `${t.id}|${t.planDate}|${t.planTime}`;
+const planAt = t => new Date(`${t.planDate}T${t.planTime}`).getTime();
+const storeRem = () => {
+  for (const k in REM) if (k.split('|')[1] !== today()) delete REM[k];
+  try { localStorage.setItem(KEY + '-rem', JSON.stringify(REM)); } catch (e) {}
+};
+function dueReminder() {
+  if (!S.settings.remind || (S.timer && S.timer.kind === 'focus')) return null; // never interrupt a running session
+  const now = Date.now(), td = today();
+  return live().filter(t => !t.done && t.planDate === td && t.planTime && !focusMinOn(td, t.id))
+    .map(t => ({ t, at: (REM[remKey(t)] || {}).snooze || planAt(t), state: REM[remKey(t)] || {} }))
+    .filter(x => !x.state.done && x.at <= now && now - x.at < REM_WINDOW)
+    .sort((a, b) => a.at - b.at)[0] || null;
+}
+function checkReminders() {
+  if (document.querySelector('dialog[open]') || $('splash')) return;
+  const due = dueReminder(); if (!due) return;
+  const t = due.t, key = remKey(t);
+  REM[key] = { done: true }; storeRem();
+  $('remTitle').textContent = t.title;
+  $('remStep').textContent = t.firstStep ? 'Перший крок: ' + t.firstStep : 'Почни з найменшого, що можна зробити за дві хвилини.';
+  const close = fn => () => { $('dlgRemind').close(); if (fn) fn(); };
+  $('remGo').onclick = close(() => startTimer('focus', S.settings.focus, t.id));
+  $('remFive').onclick = close(() => startTimer('focus', 5, t.id));
+  $('remSnooze').onclick = close(() => { REM[key] = { snooze: Date.now() + 10 * 60000 }; storeRem(); });
+  $('remLater').onclick = close();
+  $('dlgRemind').showModal();
+  beep();
+  window.desktop?.remind?.(); // PC shell: bring the window up from the tray
+  try {
+    if (window.Notification && Notification.permission === 'granted') {
+      const n = new Notification(tr('Час почати: ') + t.title, { body: t.firstStep || tr('За планом — зараз') });
+      n.onclick = () => { window.focus(); window.desktop?.show?.(); };
+    }
+  } catch (e) {}
+}
+// Android pauses the page in the background, so the phone schedules these itself as system alarms
+function pushReminders() {
+  const A = window.AndroidBridge; if (!A || !A.setReminders) return;
+  const now = Date.now(), td = today();
+  const list = [], seen = new Set();
+  if (S.settings.remind) {
+    for (const t of live()) if (!t.done && t.planDate >= td && t.planTime && planAt(t) > now) {
+      list.push({ id: t.id, at: planAt(t), title: t.title, step: t.firstStep || '' }); seen.add(t.id);
+    }
+    // habits for the coming week, so the phone reminds even on days when the app is never opened
+    for (let i = 0; i < 7; i++) for (const h of habits()) {
+      const d = addDays(i), id = instId(h, d), t = task(id), at = new Date(`${d}T${h.time}`).getTime();
+      if (!h.time || !habitOn(h, d) || seen.has(id) || (t && (t.done || t.del)) || at <= now) continue;
+      list.push({ id, at, title: h.title, step: h.mini || '' });
+    }
+  }
+  A.setReminders(JSON.stringify(list));
+}
+// PC app only: start with Windows. Hidden when run in a browser, on the phone or from source.
+(async () => {
+  const D = window.desktop; if (!D || !D.getAutostart) return;
+  const on = await D.getAutostart(); if (on === null) return;
+  $('autoRow').hidden = false; $('autoRow').style.display = 'flex'; $('setAuto').checked = on;
+  $('setAuto').onchange = async e => { e.target.checked = !!(await D.setAutostart(e.target.checked)); };
+})();
+$('setRemind').onchange = e => {
+  S.settings.remind = e.target.checked; S.kvu.settings = Date.now(); save();
+  if (e.target.checked) try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (err) {}
+};
+setInterval(checkReminders, 15000);
+
+/* ---------- look: themes ---------- */
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue('--' + name).trim();
+function setTheme(t) {
+  if (!['noir', 'poster', 'neon'].includes(t)) t = 'noir';
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem(KEY + '-theme', t); } catch (e) {}
+  document.querySelectorAll('[data-theme-pick]').forEach(b => b.classList.toggle('primary', b.dataset.themePick === t));
+  Scene.recolor();
+  // the window frame (PC) and the system bars (phone) take the header's colour
+  window.desktop?.setChrome?.(cssVar('card'), cssVar('ink'));
+  window.AndroidBridge?.setChrome?.(cssVar('card'), t === 'poster');
+}
+
+/* ---------- the loader: a dragon curve unfolding, one fold at a time ---------- */
+// Each step appends a copy of the whole curve, swung open by 90° around its end — like unfolding a paper strip.
+function Dragon(cv, { max = 10, loop = false, speed = 200, color = () => cssVar('ink') } = {}) {
+  const cx = cv.getContext('2d');
+  let pts, it, t0, view, raf = 0, alive = true;
+  const reset = () => { pts = [[0, 0], [1, 0]]; it = 0; t0 = performance.now(); view = null; };
+  function frame(now) {
+    if (!alive) return;
+    raf = requestAnimationFrame(frame);
+    const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight;
+    if (!W || !H) return;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    const k = Math.min(1, (now - t0) / speed), ease = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    const a = ease * Math.PI / 2, c = Math.cos(a), s = Math.sin(a), [px, py] = pts[pts.length - 1], extra = [];
+    for (let i = pts.length - 2; i >= 0; i--) {
+      const dx = pts[i][0] - px, dy = pts[i][1] - py;
+      extra.push([px + dx * c - dy * s, py + dx * s + dy * c]);
+    }
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const list of [pts, extra]) for (const [x, y] of list) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const target = { x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: .8 * Math.min(W / Math.max(1, x1 - x0), H / Math.max(1, y1 - y0)) };
+    view = view ? { x: view.x + (target.x - view.x) * .12, y: view.y + (target.y - view.y) * .12, z: view.z + (target.z - view.z) * .12 } : target;
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx.clearRect(0, 0, W, H);
+    cx.strokeStyle = color(); cx.lineJoin = cx.lineCap = 'round';
+    cx.lineWidth = Math.max(1, Math.min(4, view.z * .4));
+    cx.beginPath();
+    const X = x => W / 2 + (x - view.x) * view.z, Y = y => H / 2 + (y - view.y) * view.z;
+    cx.moveTo(X(pts[0][0]), Y(pts[0][1]));
+    for (let i = 1; i < pts.length; i++) cx.lineTo(X(pts[i][0]), Y(pts[i][1]));
+    for (const [x, y] of extra) cx.lineTo(X(x), Y(y));
+    cx.stroke();
+    if (k >= 1) {
+      pts = pts.concat(extra.map(([x, y]) => [Math.round(x), Math.round(y)]));
+      it++; t0 = now;
+      if (it >= max) { if (loop) reset(); else alive = false; }
+    }
+  }
+  reset(); raf = requestAnimationFrame(frame);
+  return { stop() { alive = false; cancelAnimationFrame(raf); } };
+}
+let busyFx = null;
+function busy(on) {
+  const c = $('syncFx');
+  if (on) { c.hidden = false; busyFx = busyFx || Dragon(c, { max: 8, loop: true, speed: 150, color: () => cssVar('accent') }); }
+  else setTimeout(() => { c.hidden = true; if (busyFx) busyFx.stop(); busyFx = null; }, 1200);
+}
+
+/* ---------- focus screen: rainy night city; the moon is eaten away as time passes ---------- */
+const Scene = (() => {
+  const cv = $('scene'), cx = cv.getContext('2d'), col = {};
+  let W = 0, H = 0, dpr = 1, raf = 0, last = 0, bld = [], drops = [], progress = 0;
+  const rnd = Math.random;
+  function recolor() { for (const k of ['sky1', 'sky2', 'bld', 'win', 'moon', 'rain']) col[k] = cssVar(k); }
+  function build() {
+    dpr = Math.min(2, window.devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    bld = [];
+    const span = [[.30, .26], [.22, .20], [.10, .16]]; // per layer: minimum height and random extra, as parts of the screen
+    for (let layer = 0; layer < 3; layer++) for (let x = -30; x < W + 30;) {
+      const w = 44 + rnd() * 80, h = H * (span[layer][0] + rnd() * span[layer][1]), wins = [];
+      for (let wx = 8; wx < w - 12; wx += 15) for (let wy = 10; wy < h - 14; wy += 20) wins.push({ x: wx, y: wy, on: rnd() < .22 });
+      bld.push({ layer, x, w, h, wins, mast: rnd() < .25 ? 14 + rnd() * 30 : 0 });
+      x += w + rnd() * 5;
+    }
+    drops = Array.from({ length: Math.round(W * H / 8000) }, () => ({ x: rnd() * W * 1.3, y: rnd() * H, l: 10 + rnd() * 20, v: 520 + rnd() * 520 }));
+  }
+  function draw(dt, t) {
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const sky = cx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, col.sky1); sky.addColorStop(1, col.sky2);
+    cx.fillStyle = sky; cx.fillRect(0, 0, W, H);
+    // moon: what is left of it is the time left
+    const mx = W * .76, my = H * .22, mr = Math.min(W, H) * .11;
+    cx.fillStyle = col.moon;
+    cx.globalAlpha = .1; cx.beginPath(); cx.arc(mx, my, mr * 1.7, 0, 7); cx.fill();
+    cx.globalAlpha = 1; cx.beginPath(); cx.moveTo(mx, my);
+    cx.arc(mx, my, mr, -Math.PI / 2 + progress * 2 * Math.PI, 1.5 * Math.PI); cx.closePath(); cx.fill();
+    cx.globalAlpha = .35; cx.strokeStyle = col.moon; cx.lineWidth = 2; cx.beginPath(); cx.arc(mx, my, mr, 0, 7); cx.stroke();
+    // two slow searchlights
+    cx.globalAlpha = .07;
+    for (const [ox, ph] of [[.14, 0], [.9, 2.1]]) {
+      const a = -Math.PI / 2 + Math.sin(t * .22 + ph) * .55, len = H * 1.3;
+      cx.beginPath(); cx.moveTo(W * ox, H);
+      cx.lineTo(W * ox + Math.cos(a - .07) * len, H + Math.sin(a - .07) * len);
+      cx.lineTo(W * ox + Math.cos(a + .07) * len, H + Math.sin(a + .07) * len);
+      cx.closePath(); cx.fill();
+    }
+    // skyline, far to near
+    if (rnd() < .25 && bld.length) { const b = bld[rnd() * bld.length | 0]; if (b.wins.length) { const w = b.wins[rnd() * b.wins.length | 0]; w.on = !w.on; } }
+    for (const b of bld) {
+      const top = H - b.h;
+      cx.globalAlpha = [.4, .7, 1][b.layer]; cx.fillStyle = col.bld;
+      cx.fillRect(b.x, top, b.w, b.h);
+      if (b.mast) cx.fillRect(b.x + b.w * .5, top - b.mast, 2, b.mast);
+      cx.fillStyle = col.win; cx.globalAlpha = [.25, .5, .85][b.layer];
+      for (const w of b.wins) if (w.on) cx.fillRect(b.x + w.x, top + w.y, 6, 9);
+    }
+    // rain
+    cx.globalAlpha = 1; cx.strokeStyle = col.rain; cx.lineWidth = 1.2; cx.beginPath();
+    for (const d of drops) {
+      d.y += d.v * dt; d.x -= d.v * .22 * dt;
+      if (d.y > H) { d.y = -d.l; d.x = rnd() * W * 1.3; }
+      cx.moveTo(d.x, d.y); cx.lineTo(d.x + d.l * .22, d.y - d.l);
+    }
+    cx.stroke();
+  }
+  function frame(ts) {
+    raf = requestAnimationFrame(frame);
+    if (ts - last < 33) return; // ~30 fps is plenty
+    const dt = Math.min(.05, (ts - last) / 1000); last = ts;
+    if (cv.clientWidth !== W || cv.clientHeight !== H) build();
+    if (W && H) draw(dt, ts / 1000);
+  }
+  return {
+    recolor,
+    start() { if (raf) return; recolor(); build(); raf = requestAnimationFrame(frame); },
+    stop() { cancelAnimationFrame(raf); raf = 0; },
+    progress(p) { progress = Math.max(0, Math.min(1, p)); },
+  };
+})();
+
+/* ---------- music: a slow smoky tune made up on the fly (no audio files) ---------- */
+const Music = (() => {
+  let ac, out, wet, noise, timer = 0, nextT = 0, beatN = 0, playing = false, mel = 3, rest = 0;
+  const B = 60 / 72, hz = m => 440 * Math.pow(2, (m - 69) / 12);
+  // eight bars in D minor: bass root, its third (3 = minor, 4 = major), piano voicing
+  const PROG = [
+    { r: 38, t: 3, v: [53, 57, 60, 64] }, { r: 34, t: 4, v: [53, 57, 58, 62] }, { r: 40, t: 3, v: [55, 58, 62, 64] }, { r: 33, t: 4, v: [55, 58, 61, 64] },
+    { r: 38, t: 3, v: [53, 57, 60, 64] }, { r: 43, t: 3, v: [53, 58, 62, 65] }, { r: 33, t: 4, v: [55, 58, 61, 65] }, { r: 38, t: 3, v: [53, 57, 59, 62] },
+  ];
+  const SCALE = [62, 65, 67, 68, 69, 72, 74, 77, 79]; // D blues
+  function setup() {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const sr = ac.sampleRate, fill = (len, fn) => { const b = ac.createBuffer(1, len, sr), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = fn(i); return b; };
+    out = ac.createGain(); out.gain.value = 0;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 4800;
+    const comp = ac.createDynamicsCompressor();
+    out.connect(lp); lp.connect(comp); comp.connect(ac.destination);
+    // a small room: noise that dies away
+    const len = Math.round(sr * 2.4), ir = ac.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+    const room = ac.createConvolver(); room.buffer = ir;
+    wet = ac.createGain(); wet.gain.value = .3; wet.connect(room); room.connect(out);
+    noise = fill(sr, () => Math.random() * 2 - 1);
+    // record crackle: quiet hiss with the odd pop, looped
+    let pop = 0;
+    const crackle = ac.createBufferSource();
+    crackle.buffer = fill(sr * 4, () => { if (Math.random() < .0005) pop = .3 + Math.random() * .5; const v = (Math.random() * 2 - 1) * (.006 + pop); pop *= .55; return v; });
+    crackle.loop = true;
+    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
+    const cg = ac.createGain(); cg.gain.value = .45;
+    crackle.connect(hp); hp.connect(cg); cg.connect(out); crackle.start();
+  }
+  function tone(type, f, t, dur, peak, dest, att = .012) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + att); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + .05);
+    return o;
+  }
+  function hit(t, freq, peak, dur, type) {
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = noise; f.type = type; f.frequency.value = freq; f.Q.value = .8;
+    g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(out); s.start(t, Math.random() * .5); s.stop(t + dur + .05);
+  }
+  function beat(t) {
+    const bar = Math.floor(beatN / 4) % 8, b = beatN % 4, ch = PROG[bar], nx = PROG[(bar + 1) % 8], off = t + B * 2 / 3; // swing
+    // walking bass: root, third, fifth, then a half-step lead into the next chord
+    const bn = [ch.r, ch.r + ch.t, ch.r + 7, nx.r + (Math.random() < .5 ? 1 : -1)][b];
+    tone('triangle', hz(bn), t, B * .95, .3, out); tone('sine', hz(bn), t, B * .9, .22, out);
+    // brushes
+    hit(t, 7000, .035, .09, 'highpass'); if (b % 2) { hit(off, 7000, .022, .07, 'highpass'); hit(t, 1700, .05, .22, 'bandpass'); }
+    // piano chords
+    const chord = (when, dur, peak) => ch.v.forEach((m, i) => {
+      tone('sine', hz(m), when + i * .012, dur, peak, out, .02); tone('sine', hz(m), when + i * .012, dur, peak * .8, wet, .02);
+      tone('sine', hz(m) * 2, when, dur * .4, peak * .18, out);
+    });
+    if (b === 0) chord(t, B * 3.4, .05); else if (b === 2 && Math.random() < .5) chord(off, B * 1.2, .035);
+    // a lazy lead line: short phrases, long pauses
+    for (const when of [t, off]) {
+      if (rest > 0) { rest--; continue; }
+      if (Math.random() < .45) {
+        mel = Math.max(0, Math.min(SCALE.length - 1, mel + [-2, -1, -1, 1, 1, 2][Math.random() * 6 | 0]));
+        const f = hz(SCALE[mel]), d = B * (.5 + Math.random() * 1.4), o = tone('triangle', f, when, d, .07, out, .02);
+        tone('sine', f, when, d, .08, wet, .02);
+        const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 5.2; lg.gain.value = f * .006;
+        lfo.connect(lg); lg.connect(o.frequency); lfo.start(when + .15); lfo.stop(when + d + .05);
+      } else if (Math.random() < .25) rest = 3 + (Math.random() * 6 | 0);
+    }
+    beatN++;
+  }
+  // schedule well ahead so the tune survives a throttled background tab
+  function pump() { while (nextT < ac.currentTime + 2.4) { beat(nextT); nextT += B; } }
+  return {
+    get playing() { return playing; },
+    start() {
+      if (playing) return;
+      try { if (!ac) setup(); ac.resume(); } catch (e) { return; }
+      playing = true; nextT = Math.max(nextT, ac.currentTime + .15);
+      out.gain.cancelScheduledValues(ac.currentTime); out.gain.setTargetAtTime(.9, ac.currentTime, .4);
+      pump(); timer = setInterval(pump, 400);
+    },
+    stop() {
+      if (!playing) return;
+      playing = false; clearInterval(timer);
+      out.gain.cancelScheduledValues(ac.currentTime); out.gain.setTargetAtTime(0, ac.currentTime, .25);
+      setTimeout(() => { if (!playing) ac.suspend(); }, 1500);
+    },
+    _debug: () => ({ ac, out }),
+  };
+})();
+let musicWanted = false;
+try { musicWanted = localStorage.getItem(KEY + '-music') === '1'; } catch (e) {}
+function gramUI() {
+  $('gram').classList.toggle('on', Music.playing);
+  $('musicBtn').textContent = Music.playing ? 'Вимкнути музику' : 'Увімкнути музику';
+  $('musicBtn').setAttribute('aria-pressed', Music.playing);
+}
+function toggleMusic() {
+  musicWanted = !Music.playing;
+  try { localStorage.setItem(KEY + '-music', musicWanted ? '1' : '0'); } catch (e) {}
+  if (musicWanted && S.timer) Music.start(); else Music.stop();
+  gramUI();
+}
+function openFocus() { $('focus').hidden = false; document.documentElement.style.overflow = 'hidden'; Scene.start(); gramUI(); }
+function closeFocus() { $('focus').hidden = true; document.documentElement.style.overflow = ''; Scene.stop(); }
+// called on every timer tick; with no timer it closes the screen and stops the music
+function focusScreen(T, left, txt) {
+  if (!T) { if (!$('focus').hidden) closeFocus(); if (Music.playing) { Music.stop(); gramUI(); } return; }
+  $('fClock').textContent = txt;
+  $('fLabel').textContent = T.kind === 'focus' ? 'Фокус' : 'Перерва';
+  $('fTask').textContent = $('timerTask').textContent;
+  Scene.progress(1 - left / (T.min * 60000));
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('focus').hidden && !document.querySelector('dialog[open]')) closeFocus();
+});
+
+/* ---------- our own controls instead of the system-drawn ones ---------- */
+if (window.desktop) document.documentElement.classList.add('desktop');
+
+// Confirmation / message box. Resolves true only when the main button is pressed.
+function ask(text, yes = 'Гаразд', onlyOk = false) {
+  return new Promise(resolve => {
+    const d = $('dlgAsk'), finish = v => { d.onclose = null; if (d.open) d.close(); resolve(v); };
+    $('askText').textContent = text; $('askYes').textContent = yes; $('askNo').hidden = onlyOk;
+    $('askYes').onclick = () => finish(true); $('askNo').onclick = () => finish(false);
+    d.onclose = () => resolve(false); // Esc
+    d.showModal(); $('askYes').focus();
+  });
+}
+const tell = text => ask(text, 'Гаразд', true);
+
+// Drop-down list. The real <select> stays in the page (hidden) as the value holder, so the rest of the code is unchanged.
+function Dropdown(sel) {
+  sel.classList.add('native');
+  const box = document.createElement('div');
+  box.className = 'dd';
+  box.innerHTML = '<button type="button" aria-haspopup="listbox"><span></span></button><ul role="listbox"></ul>';
+  sel.after(box);
+  const btn = box.firstChild, list = box.lastChild, close = () => box.classList.remove('open');
+  const refresh = () => {
+    btn.firstChild.textContent = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
+    list.innerHTML = [...sel.options].map((o, i) => `<li role="option" data-i="${i}" class="${o.selected ? 'sel' : ''}">${esc(o.textContent)}</li>`).join('');
+  };
+  const choose = i => { sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); refresh(); };
+  btn.onclick = () => { refresh(); box.classList.toggle('open'); };
+  list.onclick = e => { const li = e.target.closest('li'); if (li) { choose(+li.dataset.i); close(); btn.focus(); } };
+  box.onkeydown = e => {
+    if (e.key === 'Escape' && box.classList.contains('open')) { close(); e.stopPropagation(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = sel.options.length; choose((sel.selectedIndex + (e.key === 'ArrowDown' ? 1 : n - 1)) % n); }
+  };
+  document.addEventListener('click', e => { if (!box.contains(e.target)) close(); });
+  sel.refresh = refresh;
+  refresh();
+}
+Dropdown($('timerSelect'));
+
+// − / + around a number
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-step]'); if (!b) return;
+  const input = $(b.dataset.for);
+  input.value = Math.min(+input.max, Math.max(+input.min, (+input.value || 0) + +b.dataset.step));
+  input.dispatchEvent(new Event('change'));
+});
+
+// Date and time pickers. The value lives in a hidden input in the usual "YYYY-MM-DD" / "HH:MM" form.
+let pick = null;
+function refreshPicks() {
+  document.querySelectorAll('.pick').forEach(b => {
+    const v = $(b.dataset.for).value;
+    b.textContent = !v ? 'не вказано' : b.dataset.pick === 'time' ? v
+      : new Date(v + 'T12:00').toLocaleDateString(LOC, { weekday: 'short', day: 'numeric', month: 'long' });
+    b.classList.toggle('empty', !v);
+  });
+}
+function setPick(v) { pick.input.value = v; $('dlgPick').close(); refreshPicks(); }
+function drawPick() {
+  if (pick.kind === 'date') {
+    const first = new Date(pick.y, pick.m, 1), days = new Date(pick.y, pick.m + 1, 0).getDate(), td = today();
+    let html = `<div class="pick-head"><button type="button" class="btn small" data-m="-1">‹</button><b>${first.toLocaleDateString(LOC, { month: 'long' })} ${pick.y}</b><button type="button" class="btn small" data-m="1">›</button></div>
+      <div class="swatches"><button type="button" class="btn small" data-v="${td}">Сьогодні</button><button type="button" class="btn small" data-v="${addDays(1)}">Завтра</button></div>
+      <div class="cal">` + WEEK.map(([, name]) => `<span>${name}</span>`).join('') + '<i></i>'.repeat((first.getDay() + 6) % 7);
+    for (let d = 1; d <= days; d++) {
+      const v = `${pick.y}-${pad(pick.m + 1)}-${pad(d)}`;
+      html += `<button type="button" class="cell ${v === pick.input.value ? 'full' : v === td ? 'wait' : ''}" data-v="${v}">${d}</button>`;
+    }
+    $('pickBody').innerHTML = html + '</div>';
+  } else {
+    const chips = (n, step, cur, key) => Array.from({ length: n }, (_, i) => pad(i * step))
+      .map(x => `<button type="button" class="chip ${x === cur ? 'sel' : ''}" data-${key}="${x}">${x}</button>`).join('');
+    $('pickBody').innerHTML = `<h3 style="margin-top:0">Година</h3><div class="chips">${chips(24, 1, pick.hh, 'h')}</div><h3>Хвилини</h3><div class="chips">${chips(12, 5, pick.mm, 'mi')}</div>`;
+  }
+  $('pickOk').hidden = pick.kind !== 'time';
+}
+function openPick(btn) {
+  const input = $(btn.dataset.for), v = input.value, now = new Date();
+  pick = { input, kind: btn.dataset.pick };
+  if (pick.kind === 'date') { const d = v ? new Date(v + 'T12:00') : now; pick.y = d.getFullYear(); pick.m = d.getMonth(); }
+  else { pick.hh = v ? v.slice(0, 2) : pad(now.getHours()); pick.mm = v ? v.slice(3) : '00'; }
+  drawPick();
+  $('dlgPick').showModal();
+}
+$('pickBody').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.m) { const d = new Date(pick.y, pick.m + +b.dataset.m, 1); pick.y = d.getFullYear(); pick.m = d.getMonth(); drawPick(); }
+  else if (b.dataset.v) setPick(b.dataset.v);
+  else if (b.dataset.h) { pick.hh = b.dataset.h; drawPick(); }             // hour first…
+  else if (b.dataset.mi) setPick(pick.hh + ':' + b.dataset.mi);            // …a tap on minutes finishes
+};
+$('pickOk').onclick = () => setPick(pick.hh + ':' + pick.mm);
+$('pickClear').onclick = () => setPick('');
+document.addEventListener('click', e => { const b = e.target.closest('.pick'); if (b) openPick(b); });
+refreshPicks();
+
+// Phone only: which apps to block, with our own list instead of a system screen
+function openApps() {
+  const A = window.AndroidBridge; if (!A) return;
+  if (!A.listApps) return A.pickApps(); // an older build of the phone app
+  const apps = JSON.parse(A.listApps());
+  const draw = q => {
+    $('appList').innerHTML = apps.filter(a => a.n.toLowerCase().includes(q)).map(a =>
+      `<li><label class="toggle"><span>${esc(a.n)}</span><input type="checkbox" class="switch" value="${esc(a.p)}" ${a.on ? 'checked' : ''}></label></li>`).join('')
+      || '<li class="empty">Нічого не знайдено.</li>';
+  };
+  $('appSearch').value = ''; draw('');
+  $('appSearch').oninput = e => draw(e.target.value.trim().toLowerCase());
+  $('appList').onchange = e => { const a = apps.find(x => x.p === e.target.value); if (a) a.on = e.target.checked; };
+  $('appsSave').onclick = () => { A.setApps(JSON.stringify(apps.filter(a => a.on).map(a => a.p))); $('dlgApps').close(); phoneNote(); };
+  $('dlgApps').showModal();
+}
+
+/* ---------- start-up ident ---------- */
+(() => {
+  const sp = $('splash');
+  const fx = Dragon($('splashFx'), { max: 11, speed: 170, color: () => '#17130a' });
+  let gone = false;
+  const leave = () => {
+    if (gone) return; gone = true;
+    sp.classList.add('out');
+    setTimeout(() => { fx.stop(); sp.remove(); checkReminders(); }, 750);
+  };
+  setTimeout(leave, matchMedia('(prefers-reduced-motion: reduce)').matches ? 700 : 2700);
+  sp.addEventListener('click', leave);
+})();
+
+setTheme(document.documentElement.dataset.theme);
+document.querySelectorAll('[data-lang]').forEach(b => b.classList.toggle('primary', b.dataset.lang === LANG));
+initSettings(); render(); pushDesktop(); pushReminders(); sync().then(loadCal);
+setInterval(sync, 20000);
+// Another tab of the app saved its data: take it over, so this tab cannot later overwrite it with a stale copy.
+window.addEventListener('storage', e => { if (e.key === KEY && e.newValue) { S = load(); render(); } });
+
+// Claude talks to the PC app (desktop/main.js), which reads and writes the data through this object.
+// Writes follow the sync rule — the newer `u` wins — then save and sync like any change made by hand.
+window.FocusStore = {
+  snapshot: () => JSON.parse(JSON.stringify({ tasks: S.tasks, habits: S.habits, sessions: S.sessions, stuck: S.stuck, timer: S.timer })),
+  put(col, rec) {
+    if (!['tasks', 'habits'].includes(col) || !rec || typeof rec.id !== 'string' || typeof rec.u !== 'number') return false;
+    const i = S[col].findIndex(x => x.id === rec.id);
+    if (i >= 0 && S[col][i].u > rec.u) return false;
+    if (i < 0) S[col].push(rec); else S[col][i] = rec;
+    save(); render();
+    return true;
+  },
+  async events(from, to) {
+    if (!SY.url || !SY.token) return { configured: false, events: CAL.filter(e => e.date >= from && e.date <= to) };
+    try { return await api(`/api/calendar?from=${from}&to=${to}`); }
+    catch (e) { return { configured: true, events: CAL.filter(e2 => e2.date >= from && e2.date <= to), error: e.message }; }
+  },
+};
+(async () => {
+  const D = window.desktop; if (!D || !D.getMcpInfo) return;
+  const i = await D.getMcpInfo(); if (!i) return;
+  $('claudeCard').hidden = false;
+  $('mcpCode').textContent = `claude mcp add --scope user focus -- node "${i.bridge}"`;
+  $('mcpDesktop').textContent = JSON.stringify({ mcpServers: { focus: { command: 'node', args: [i.bridge] } } }, null, 2);
+})();
+setInterval(loadCal, 10 * 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { sync(); phoneNote(); renderTimer(); checkReminders(); } });
+window.AndroidBridge?.setServer(SY.url, SY.token);
+setInterval(() => { if (!document.querySelector('dialog[open]') && document.activeElement?.tagName !== 'INPUT') renderToday(); }, 60000);
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Фокус — блокування сайтів",
+  "version": "1.0.0",
+  "description": "Поки у програмі «Фокус» триває сесія, закриває сайти з твого списку.",
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
+  "permissions": ["tabs", "alarms"],
+  "host_permissions": ["http://127.0.0.1:47600/*"],
+  "background": { "service_worker": "background.js" }
+}

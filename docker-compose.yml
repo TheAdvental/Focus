@@ -1,0 +1,13 @@
+services:
+  focus:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      FOCUS_TOKEN: ${FOCUS_TOKEN:?set FOCUS_TOKEN in .env}
+      TZ: ${TZ:-Europe/Kyiv}
+    volumes:
+      - focus-data:/data
+volumes:
+  focus-data:

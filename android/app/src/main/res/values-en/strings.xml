@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Used when the phone itself is set to English. The web page inside the app has its own language switch. -->
+<resources>
+    <string name="app_name">Focus</string>
+    <string name="acc_desc">During a focus session, closes the apps you added to the list yourself. It only sees the name of the app that was opened; it does not read the screen.</string>
+    <string name="blocked_title">It is focus time</string>
+    <string name="blocked_back">Back to Focus</string>
+    <string name="blocked_ok">Got it</string>
+    <string name="blocked_task">You are working on: %1$s</string>
+    <string name="done_title">Session finished</string>
+    <string name="done_text">Time for a break. Open Focus to record the result.</string>
+    <string name="channel">Session endings</string>
+    <string name="channel_remind">Plan reminders</string>
+    <string name="remind_title">Time to start: %1$s</string>
+    <string name="remind_step">First step: %1$s</string>
+    <string name="remind_text">On the plan — now. Start with two minutes.</string>
+</resources>

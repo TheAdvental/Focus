@@ -1,0 +1,5 @@
+# The image needs only the server and index.html
+*
+!server/server.js
+!server/mcp-tools.js
+!index.html
