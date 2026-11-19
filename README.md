@@ -1,5 +1,10 @@
 # Фокус
 
+> **Focus** is a personal anti-procrastination system: day plan with a tiny first step per task, focus timer, reminders, habits and stats.
+> During a focus session it blocks distracting programs on Windows (Electron app), sites in Chrome/Edge (MV3 extension) and apps on Android (accessibility service).
+> The whole UI is one self-contained `index.html`; an optional zero-dependency Node server syncs devices on the home LAN, reads Google Calendar via iCal and exposes MCP tools so Claude can manage the plan.
+> UI in Ukrainian and English; the docs below are in Ukrainian. MIT licensed.
+
 Система проти прокрастинації: план дня, таймер фокусу, блокування відволікань, синхронізація через власний сервер.
 
 **Детальна документація — у папці [docs](docs/README.md):** посібник користувача, встановлення, будова системи, довідник з API, вирішення проблем. Нижче — коротка шпаргалка.
