@@ -47,9 +47,9 @@ Put your own long random key into `FOCUS_TOKEN` in `.env` (generate one with `op
 docker compose up -d --build
 ```
 
-The server listens on port 8080. Data lives in the `focus-data` volume.
+The server listens on port 8090 (`FOCUS_PORT` in `.env`). Data lives in the `focus-data` volume.
 
-The server also serves the app itself: from a phone on your home network open `http://SERVER-ADDRESS:8080`.
+The server also serves the app itself: from a phone on your home network open `http://SERVER-ADDRESS:8090`.
 
 > The server speaks plain HTTP without encryption — keep it on your home network only, don't expose the port to the internet.
 
@@ -76,7 +76,7 @@ Running from source without building, for development: `npm install`, then `npm 
 
 In the "Settings" tab:
 
-- **Sync** — server address (`http://192.168.x.x:8080`) and the key from `.env`.
+- **Sync** — server address (`http://192.168.x.x:8090`) and the key from `.env`.
 - **Blocking** — list of sites and programs (file name, e.g. `Telegram.exe`).
   A program from the list is first asked to close, and if it hasn't closed within a few seconds it is killed, so unsaved work in it may be lost.
 
@@ -189,9 +189,9 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Сервер слухає порт 8080. Дані лежать у томі `focus-data`.
+Сервер слухає порт 8090 (`FOCUS_PORT` у `.env`). Дані лежать у томі `focus-data`.
 
-Сервер віддає і сам додаток: з телефона в домашній мережі відкрий `http://АДРЕСА-СЕРВЕРА:8080`.
+Сервер віддає і сам додаток: з телефона в домашній мережі відкрий `http://АДРЕСА-СЕРВЕРА:8090`.
 
 > Сервер працює по HTTP без шифрування — тримай його лише в домашній мережі, не відкривай порт в інтернет.
 
@@ -218,7 +218,7 @@ npm run build
 
 У вкладці «Налаштування»:
 
-- **Синхронізація** — адреса сервера (`http://192.168.x.x:8080`) і ключ із `.env`.
+- **Синхронізація** — адреса сервера (`http://192.168.x.x:8090`) і ключ із `.env`.
 - **Блокування** — список сайтів і програм (назва файлу, напр. `Telegram.exe`).
   Програму зі списку спершу просять закритися, а якщо вона не закрилась за кілька секунд — закривають примусово, тож незбережене в ній може зникнути.
 
